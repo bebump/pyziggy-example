@@ -1,0 +1,9 @@
+[mqtt_server]
+host = "192.168.1.56"
+port = 1883
+keepalive = 60
+base_topic = "zigbee2mqtt"
+use_tls = false
+
+[flask]
+flask_port = 5001

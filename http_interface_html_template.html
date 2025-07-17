@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home automation commands</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            max-width: 80%;
+        }
+
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            max-width: 90%;
+        }
+
+        .mobile-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 16px 32px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+            min-width: 150px;
+            text-align: center;
+            margin: 0;
+        }
+
+        .mobile-button:hover {
+            background-color: #45a049;
+        }
+
+        .mobile-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script>
+    function sendData(data) {
+      fetch('/pyziggy/post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+    }
+    </script>
+</head>
+<body>
+<p class="welcome-text">$welcome_text</p>
+    <div class="button-container">
+        <button class="mobile-button" onclick='sendData($button_text)'>$button_text</button>
+    </div>
+</body>
+</html>

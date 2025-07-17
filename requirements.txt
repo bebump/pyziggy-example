@@ -1,0 +1,2 @@
+-e ../pyziggy
+astral==3.2
