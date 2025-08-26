@@ -21,10 +21,13 @@ from device_helpers import (
     IkeaN2CommandRepeater,
     PhilipsTapDialRotaryHelper,
 )
-from pyziggy_autogenerate.available_devices import AvailableDevices, Philips_RDM002
+from pyziggy_autogenerate.available_devices import (
+    AvailableDevices,
+    Philips_RDM002,
+    IKEA_TRADFRI_remote_control,
+)
 
 devices = AvailableDevices()
-
 
 kitchen = ScaleMapper(
     [
@@ -74,6 +77,30 @@ def ikea_remote_action_handler():
 
 ikea_remote_action_broadcaster = IkeaN2CommandRepeater(devices.ikea_remote)
 ikea_remote_action_broadcaster.repeating_action.add_listener(ikea_remote_action_handler)
+
+
+def tradfri_remote_action_handler():
+    action = devices.tradfri_remote.action.get_enum_value()
+    types = devices.tradfri_remote.action.enum_type
+
+    bedroom_devices: list[LightWithDimming] = [devices.lampion, devices.fado]
+
+    if action == types.toggle:
+        state_to = 0 if bedroom_devices[0].state.get() else 1
+        for device in bedroom_devices:
+            device.state.set(state_to)
+            device.brightness.set_normalized(1)
+    elif action == types.toggle_hold:
+        turn_off_everything()
+    elif action == types.brightness_down_click:
+        for device in bedroom_devices:
+            device.brightness.add_normalized(-0.2)
+    elif action == types.brightness_up_click:
+        for device in bedroom_devices:
+            device.brightness.add_normalized(0.2)
+
+
+devices.tradfri_remote.action.add_listener(tradfri_remote_action_handler)
 
 
 def kitchen_dimmer(step: int):

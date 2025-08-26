@@ -11,7 +11,7 @@ from pyziggy.parameters import (
     SettableEnumParameter,
     BinaryParameter,
     SettableAndQueryableToggleParameter,
-    int_to_enum,
+    _int_to_enum,
     SettableAndQueryableBinaryParameter,
     SettableBinaryParameter,
     CompositeParameter,
@@ -155,7 +155,7 @@ class EnumParameterForEnum0(EnumParameter):
         self.enum_type = Enum0
 
     def get_enum_value(self) -> Enum0:
-        return int_to_enum(Enum0, int(self.get()))
+        return _int_to_enum(Enum0, int(self.get()))
 
 
 class EnumParameterForEnum1(EnumParameter):
@@ -164,7 +164,7 @@ class EnumParameterForEnum1(EnumParameter):
         self.enum_type = Enum1
 
     def get_enum_value(self) -> Enum1:
-        return int_to_enum(Enum1, int(self.get()))
+        return _int_to_enum(Enum1, int(self.get()))
 
 
 class EnumParameterForEnum10(EnumParameter):
@@ -173,7 +173,7 @@ class EnumParameterForEnum10(EnumParameter):
         self.enum_type = Enum10
 
     def get_enum_value(self) -> Enum10:
-        return int_to_enum(Enum10, int(self.get()))
+        return _int_to_enum(Enum10, int(self.get()))
 
 
 class EnumParameterForEnum11(EnumParameter):
@@ -182,7 +182,7 @@ class EnumParameterForEnum11(EnumParameter):
         self.enum_type = Enum11
 
     def get_enum_value(self) -> Enum11:
-        return int_to_enum(Enum11, int(self.get()))
+        return _int_to_enum(Enum11, int(self.get()))
 
 
 class EnumParameterForEnum2(EnumParameter):
@@ -191,7 +191,7 @@ class EnumParameterForEnum2(EnumParameter):
         self.enum_type = Enum2
 
     def get_enum_value(self) -> Enum2:
-        return int_to_enum(Enum2, int(self.get()))
+        return _int_to_enum(Enum2, int(self.get()))
 
 
 class EnumParameterForEnum3(EnumParameter):
@@ -200,7 +200,7 @@ class EnumParameterForEnum3(EnumParameter):
         self.enum_type = Enum3
 
     def get_enum_value(self) -> Enum3:
-        return int_to_enum(Enum3, int(self.get()))
+        return _int_to_enum(Enum3, int(self.get()))
 
 
 class EnumParameterForEnum4(EnumParameter):
@@ -209,7 +209,7 @@ class EnumParameterForEnum4(EnumParameter):
         self.enum_type = Enum4
 
     def get_enum_value(self) -> Enum4:
-        return int_to_enum(Enum4, int(self.get()))
+        return _int_to_enum(Enum4, int(self.get()))
 
 
 class EnumParameterForEnum5(EnumParameter):
@@ -218,7 +218,7 @@ class EnumParameterForEnum5(EnumParameter):
         self.enum_type = Enum5
 
     def get_enum_value(self) -> Enum5:
-        return int_to_enum(Enum5, int(self.get()))
+        return _int_to_enum(Enum5, int(self.get()))
 
 
 class EnumParameterForEnum6(EnumParameter):
@@ -227,7 +227,7 @@ class EnumParameterForEnum6(EnumParameter):
         self.enum_type = Enum6
 
     def get_enum_value(self) -> Enum6:
-        return int_to_enum(Enum6, int(self.get()))
+        return _int_to_enum(Enum6, int(self.get()))
 
 
 class EnumParameterForEnum7(EnumParameter):
@@ -236,7 +236,7 @@ class EnumParameterForEnum7(EnumParameter):
         self.enum_type = Enum7
 
     def get_enum_value(self) -> Enum7:
-        return int_to_enum(Enum7, int(self.get()))
+        return _int_to_enum(Enum7, int(self.get()))
 
 
 class EnumParameterForEnum8(EnumParameter):
@@ -245,7 +245,7 @@ class EnumParameterForEnum8(EnumParameter):
         self.enum_type = Enum8
 
     def get_enum_value(self) -> Enum8:
-        return int_to_enum(Enum8, int(self.get()))
+        return _int_to_enum(Enum8, int(self.get()))
 
 
 class EnumParameterForEnum9(EnumParameter):
@@ -254,7 +254,7 @@ class EnumParameterForEnum9(EnumParameter):
         self.enum_type = Enum9
 
     def get_enum_value(self) -> Enum9:
-        return int_to_enum(Enum9, int(self.get()))
+        return _int_to_enum(Enum9, int(self.get()))
 
 
 class SettableEnumParameterForEnum11(SettableEnumParameter, EnumParameterForEnum11):
@@ -467,7 +467,6 @@ class AvailableDevices(DevicesClient):
         self.reading_lamp = Innr_RB_249_T("Reading Lamp")
         self.dining_light_1 = Innr_RB_279_T("Dining Light 1")
         self.dining_light_2 = Innr_RB_279_T("Dining Light 2")
-        self.standing_lamp = Innr_RB_279_T("Standing Lamp")
         self.kitchen_light = IKEA_STOFTMOLN_ceiling_wall_lamp_WW37("Kitchen Light")
         self.lampion = Innr_RB_249_T("Lampion")
         self.fado = Innr_RB_279_T("Fado")
@@ -487,4 +486,6 @@ class AvailableDevices(DevicesClient):
         self.color_bulb = IKEA_TRADFRI_bulb_E27_CWS_globe_806lm("Color bulb")
         self.printer = Innr_RB_248_T("Printer")
         self.switch_poang = Philips_RDM002("Switch Poang")
+        self.a0x001788010ea91642 = Philips_LCL007("0x001788010ea91642")
+        self.standing_lamp = Innr_RB_279_T("Standing Lamp")
 

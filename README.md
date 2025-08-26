@@ -1,13 +1,13 @@
-## Prerequisites
+A fully-fledged and continously tested home automation project using <https://pyziggy.github.io>.
 
-Pyenv and rsync 3.2+.
+## Bootstrapping the project directly from the home automation server
 
-`brew install pyenv rsync`
+You need the following prerequisites
 
-## Getting started using git
-You can clone this repository and then run `./pyziggy-setup setup` in the project directory to set up a Python virtual environment and install the required dependencies.
+* rsync 3.2.0+
+* pyenv
 
-## Or bootstrapping the project directly from the home automation server
+You can install both using `brew`.
 
 This approach will not initialize a git repository in your project directory.
 
@@ -17,21 +17,3 @@ This approach will not initialize a git repository in your project directory.
 4. Run `./pyziggy-setup setup`. This will set up a Python virtual environment and install the required dependencies.
 
 Once you're done with the modifications, you can run `./pyziggy-setup sync-remote start main.py` to upload all modified files to the server and start the service again.
-
-
-## How to debug the project
-
-You can open the project directory in Pycharm. You should use the interpreter that was created by `pyziggy-setup` in the `.venv` directory. PyCharm should offer this by default.
-
-Create the following run configuration for debugging:
-
-![PyCharm Debugging Setup](docs/images/pycharm_debugging_setup.png)
-
-You can use the same arguments that you would with the `pyziggy run` command-line subcommand e.g. `--verbose` for logging more information.
-
-
-## Switching between deployment and development
-
-`./pyziggy-setup sync-remote start main.py` to upload the project to the server and start the service.
-
-`./pyziggy-setup sync-remote stop` to download project files from the server and stop the service.
