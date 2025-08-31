@@ -309,7 +309,7 @@ class AutoColorTemp:
         return self._last_mired
 
     def start(self):
-        self._timer.start(5)
+        self._timer.start(10)
 
     def stop(self):
         self._timer.stop()
