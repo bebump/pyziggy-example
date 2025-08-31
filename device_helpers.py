@@ -1,8 +1,13 @@
+from typing import final
+
 from pyziggy.message_loop import MessageLoopTimer
 from pyziggy.parameters import Broadcaster, AnyBroadcaster
+from pyziggy.util import Scalable
+
 from pyziggy_autogenerate.available_devices import (
     IKEA_Remote_Control_N2,
     Philips_RDM002,
+    Tuya_TS011F,
 )
 
 
@@ -102,3 +107,22 @@ class PhilipsTapDialRotaryHelper:
             or action == t.button_4_press
         ):
             self._start_suppress_step_255()
+
+
+class PlugScalable(Scalable):
+    def __init__(self, plug: Tuya_TS011F):
+        self._plug = plug
+        self._last_value = 0.0
+
+    @final
+    def set_normalized(self, value: float):
+        if value == 1 or value > self._last_value:
+            self._plug.state.set(1)
+        else:
+            self._plug.state.set(0)
+
+        self._last_value = value
+
+    @final
+    def get_normalized(self) -> float:
+        return self._last_value

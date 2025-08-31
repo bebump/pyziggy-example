@@ -20,11 +20,11 @@ from astral_mired import MiredCalculator, TimeOfDay, EasyAstral
 from device_helpers import (
     IkeaN2CommandRepeater,
     PhilipsTapDialRotaryHelper,
+    PlugScalable,
 )
 from pyziggy_autogenerate.available_devices import (
     AvailableDevices,
     Philips_RDM002,
-    IKEA_TRADFRI_remote_control,
 )
 
 devices = AvailableDevices()
@@ -42,10 +42,13 @@ kitchen = ScaleMapper(
 
 living_room = ScaleMapper(
     [
-        (L2S(devices.standing_lamp), 0.0, 0.7),
+        (PlugScalable(devices.plug), 0.0, 0.05),
+        (L2S(devices.standing_lamp), 0.07, 0.7),
         (L2S(devices.couch), 0.2, 0.7),
         (L2S(devices.color_bulb), 0.7, 1.0),
-    ]
+    ],
+    [0.06],
+    lambda: os.system("afplay /System/Library/Sounds/Tink.aiff &"),
 )
 
 
