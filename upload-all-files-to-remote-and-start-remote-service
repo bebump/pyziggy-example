@@ -1,0 +1,4 @@
+#!/bin/bash
+
+SELF_DIR="$(cd "$(dirname "$0")"; pwd)"
+"$SELF_DIR/pyziggy-setup" sync-remote start main.py
