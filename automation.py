@@ -45,7 +45,7 @@ living_room = ScaleMapper(
         (PlugScalable(devices.plug), 0.0, 0.05),
         (L2S(devices.standing_lamp), 0.07, 0.7),
         (L2S(devices.couch), 0.2, 0.7),
-        (L2S(devices.color_bulb), 0.7, 1.0),
+        (L2S(devices.tallbyn), 0.7, 1.0),
     ],
     [0.06],
     lambda: os.system("afplay /System/Library/Sounds/Tink.aiff &"),
@@ -380,7 +380,7 @@ class OnceADay:
 
 morning_lights: list[LightWithDimming] = [
     devices.couch,
-    devices.color_bulb,
+    devices.tallbyn,
     devices.hue_lightstrip,
     devices.standing_lamp,
     devices.reading_lamp,

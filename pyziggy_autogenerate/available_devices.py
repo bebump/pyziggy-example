@@ -488,4 +488,5 @@ class AvailableDevices(DevicesClient):
         self.switch_poang = Philips_RDM002("Switch Poang")
         self.a0x001788010ea91642 = Philips_LCL007("0x001788010ea91642")
         self.standing_lamp = Innr_RB_279_T("Standing Lamp")
+        self.tallbyn = Innr_RB_279_T("Tallbyn")
 
