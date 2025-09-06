@@ -1,7 +1,5 @@
 import datetime
-import json
 import os
-from pathlib import Path
 from typing import Callable, Any
 
 from pyziggy.device_bases import LightWithColorTemp, LightWithColor, LightWithDimming
@@ -26,6 +24,7 @@ from pyziggy_autogenerate.available_devices import (
     AvailableDevices,
     Philips_RDM002,
 )
+from secrets import get_secret_or_else
 
 devices = AvailableDevices()
 
@@ -263,28 +262,6 @@ def toggle_office():
 
 def toggle_couch():
     devices.couch.state.set(0 if devices.couch.state.get() > 0 else 1)
-
-
-def get_secret_or_else(key: str, default: Any) -> Any:
-    def rel_to_py(*paths) -> Path:
-        return Path(
-            os.path.realpath(
-                os.path.join(os.path.realpath(os.path.dirname(__file__)), *paths)
-            )
-        )
-
-    secrets_path = rel_to_py("secrets", "secrets.json")
-
-    if not secrets_path.exists():
-        return default
-
-    with open(secrets_path, "r") as f:
-        data = json.load(f)
-
-        if key not in data:
-            return default
-
-        return data[key]
 
 
 class AutoColorTemp:
