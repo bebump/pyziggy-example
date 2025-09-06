@@ -480,7 +480,6 @@ class AvailableDevices(DevicesClient):
         self.ikea_remote = IKEA_Remote_Control_N2("Ikea remote")
         self.office_temp = SONOFF_SNZB_02P("Office temp")
         self.couch = Philips_LCL007("Couch")
-        self.dishwasher_leak_sensor = IKEA_BADRING_Water_Leakage_Sensor("dishwasher leak sensor")
         self.bathroom_temp = SONOFF_SNZB_02P("Bathroom temp")
         self.switch_kitchen = Philips_RDM002("Switch Kitchen")
         self.color_bulb = IKEA_TRADFRI_bulb_E27_CWS_globe_806lm("Color bulb")
@@ -489,4 +488,5 @@ class AvailableDevices(DevicesClient):
         self.a0x001788010ea91642 = Philips_LCL007("0x001788010ea91642")
         self.standing_lamp = Innr_RB_279_T("Standing Lamp")
         self.tallbyn = Innr_RB_279_T("Tallbyn")
+        self.dishwasher_leak_sensor = IKEA_BADRING_Water_Leakage_Sensor("dishwasher leak sensor")
 

@@ -20,6 +20,7 @@ from device_helpers import (
     PhilipsTapDialRotaryHelper,
     PlugScalable,
 )
+from pushover import send_push_notification_to_home_group
 from pyziggy_autogenerate.available_devices import (
     AvailableDevices,
     Philips_RDM002,
@@ -381,3 +382,44 @@ def turn_on_morning_lights():
 
 turn_on_lights_in_the_morning = OnceADay(8.5, turn_on_morning_lights)
 devices.on_connect.add_listener(lambda: turn_on_lights_in_the_morning.start())
+
+
+class WaterSensorAlert:
+    def __init__(self):
+        self.timer = MessageLoopTimer(self.timer_callback)
+        self.callback_counter = 0
+        self.timer.start(2)
+
+    def timer_callback(self, timer: MessageLoopTimer):
+        if self.callback_counter % 1 == 0:
+            os.system("afplay /System/Library/Sounds/Submarine.aiff &")
+
+        if self.callback_counter % 10 == 0:
+            send_push_notification_to_home_group("Water sensor alert!")
+
+        self.callback_counter += 1
+
+    def deactivate(self):
+        self.timer.stop()
+
+
+water_sensor_alert: WaterSensorAlert | None = None
+
+
+def activate_water_sensor_alert():
+    global water_sensor_alert
+
+    value = devices.dishwasher_leak_sensor.water_leak.get()
+
+    if value == 1:
+        if water_sensor_alert is not None:
+            return
+
+        water_sensor_alert = WaterSensorAlert()
+    else:
+        if water_sensor_alert is not None:
+            water_sensor_alert.deactivate()
+            water_sensor_alert = None
+
+
+devices.dishwasher_leak_sensor.water_leak.add_listener(activate_water_sensor_alert)
