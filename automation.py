@@ -40,7 +40,7 @@ kitchen = ScaleMapper(
     lambda: os.system("afplay /System/Library/Sounds/Tink.aiff &"),
 )
 
-living_room = ScaleMapper(
+living_room_with_couch = ScaleMapper(
     [
         (PlugScalable(devices.plug), 0.0, 0.05),
         (L2S(devices.standing_lamp), 0.07, 0.7),
@@ -50,6 +50,18 @@ living_room = ScaleMapper(
     [0.06],
     lambda: os.system("afplay /System/Library/Sounds/Tink.aiff &"),
 )
+
+living_room_no_couch = ScaleMapper(
+    [
+        (PlugScalable(devices.plug), 0.0, 0.05),
+        (L2S(devices.tallbyn), 0.07, 0.7),
+        (L2S(devices.standing_lamp), 0.5, 1.0),
+    ],
+    [0.06, 0.7],
+    lambda: os.system("afplay /System/Library/Sounds/Tink.aiff &"),
+)
+
+living_room = living_room_with_couch
 
 
 def set_mired(mired):
@@ -183,6 +195,17 @@ default_button_mapping = {
 }
 
 
+def switch_living_room_scene():
+    global living_room
+
+    if living_room is living_room_with_couch:
+        living_room = living_room_no_couch
+        devices.couch.state.set(0)
+    else:
+        living_room = living_room_with_couch
+        devices.couch.state.set(1)
+
+
 class PhilipsButtonHandler:
     def __init__(self, switch: Philips_RDM002):
         self.switch = switch
@@ -210,12 +233,8 @@ class PhilipsButtonHandler:
         if action == t.button_2_press:
             self.philips_dial_handler = kitchen_dimmer
             self.start()
-        if action == t.button_3_press:
-            self.philips_dial_handler = hue_changer
-            self.start()
-        if action == t.button_4_press:
-            self.philips_dial_handler = saturation_changer
-            self.start()
+        if action == t.button_3_press or action == t.button_4_press:
+            switch_living_room_scene()
         if action == t.button_1_hold and self.button_1_released:
             self.button_1_released = False
             turn_off_everything()
