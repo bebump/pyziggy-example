@@ -476,3 +476,13 @@ class Tv(Broadcaster):
 
 
 tv_state = Tv(devices.ikea_smart_plug.current)
+
+
+def tv_state_changed():
+    if tv_state.get():
+        living_room.set(0.2)
+    else:
+        living_room.set(1.0)
+
+
+tv_state.add_listener(tv_state_changed)
