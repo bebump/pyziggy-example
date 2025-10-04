@@ -328,6 +328,19 @@ class IKEA_BADRING_Water_Leakage_Sensor(Device):
         Device.__init__(self, name)
 
 
+class IKEA_INSPELNING_Smart_plug(Device):
+    def __init__(self, name):
+        self.current = QueryableNumericParameter("current", -2147483648, 2147483647)
+        self.energy = QueryableNumericParameter("energy", -2147483648, 2147483647)
+        self.identify = SettableEnumParameterForEnum5("identify", [e.value for e in Enum5])
+        self.linkquality = NumericParameter("linkquality", 0, 255)
+        self.power = QueryableNumericParameter("power", -2147483648, 2147483647)
+        self.power_on_behavior = SettableEnumParameterForEnum4("power_on_behavior", [e.value for e in Enum4])
+        self.state = SettableAndQueryableToggleParameter("state")
+        self.voltage = QueryableNumericParameter("voltage", -2147483648, 2147483647)
+        Device.__init__(self, name)
+
+
 class IKEA_Remote_Control_N2(Device):
     def __init__(self, name):
         self.action = EnumParameterForEnum10("action", [e.value for e in Enum10])
@@ -489,4 +502,5 @@ class AvailableDevices(DevicesClient):
         self.tallbyn = Innr_RB_279_T("Tallbyn")
         self.dishwasher_leak_sensor = IKEA_BADRING_Water_Leakage_Sensor("dishwasher leak sensor")
         self.kitchen_light = IKEA_STOFTMOLN_ceiling_wall_lamp_WW37("Kitchen Light")
+        self.ikea_smart_plug = IKEA_INSPELNING_Smart_plug("Ikea Smart Plug")
 
