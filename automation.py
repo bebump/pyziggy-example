@@ -195,15 +195,19 @@ default_button_mapping = {
 }
 
 
-def switch_living_room_scene():
+def switch_living_room_scene(couch: bool | None = None):
+    """If you omit the couch parameter, it will toggle the state."""
     global living_room
 
-    if living_room is living_room_with_couch:
-        living_room = living_room_no_couch
-        devices.couch.state.set(0)
-    else:
+    if couch is None:
+        couch = living_room is not living_room_with_couch
+
+    if couch:
         living_room = living_room_with_couch
         devices.couch.state.set(1)
+    else:
+        living_room = living_room_no_couch
+        devices.couch.state.set(0)
 
 
 class PhilipsButtonHandler:
