@@ -4,7 +4,7 @@ from typing import Callable, Any
 
 from pyziggy.device_bases import LightWithColorTemp, LightWithColor, LightWithDimming
 from pyziggy.message_loop import MessageLoopTimer
-from pyziggy.parameters import Broadcaster
+from pyziggy.parameters import Broadcaster, NumericParameter
 from pyziggy.parameters import (
     SettableBinaryParameter,
     SettableToggleParameter,
@@ -442,3 +442,33 @@ def activate_water_sensor_alert():
 
 
 devices.dishwasher_leak_sensor.water_leak.add_listener(activate_water_sensor_alert)
+
+
+class Tv(Broadcaster):
+    def __init__(self, current: NumericParameter):
+        super().__init__()
+        self._is_on: bool | None = False
+
+        current.add_listener(self._current_listener)
+
+    def _current_listener(self):
+        new_is_on = devices.ikea_smart_plug.current.get() > 0.4
+
+        if self._is_on is None:
+            self._is_on = new_is_on
+            return
+
+        state_changed = self._is_on != new_is_on
+        self._is_on = new_is_on
+
+        if state_changed:
+            self._call_listeners()
+
+    def get(self) -> bool:
+        if self._is_on is None:
+            return False
+
+        return self._is_on
+
+
+tv_state = Tv(devices.ikea_smart_plug.current)
