@@ -452,11 +452,15 @@ class Tv(Broadcaster):
     def __init__(self, current: NumericParameter):
         super().__init__()
         self._is_on: bool | None = False
+        self._timer = MessageLoopTimer(self._timer_callback)
 
         current.add_listener(self._current_listener)
 
+    def _timer_callback(self, t: MessageLoopTimer):
+        self._call_listeners()
+
     def _current_listener(self):
-        new_is_on = devices.ikea_smart_plug.current.get() > 0.4
+        new_is_on = devices.ikea_smart_plug.current.get() > 0.2
 
         if self._is_on is None:
             self._is_on = new_is_on
@@ -465,8 +469,11 @@ class Tv(Broadcaster):
         state_changed = self._is_on != new_is_on
         self._is_on = new_is_on
 
+        # Debouncing the TV state. When on a black screen the current can drop down
+        # to a very low value. start() aborts/resets an already running timer, so the
+        # callback will only be called if the TV state remained the same for 10 secs.
         if state_changed:
-            self._call_listeners()
+            self._timer.start(10)
 
     def get(self) -> bool:
         if self._is_on is None:
