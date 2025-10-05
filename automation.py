@@ -159,6 +159,9 @@ def turn_off_everything():
     new_device_params_turned_off = []
 
     for device in devices.get_devices():
+        if device == devices.ikea_smart_plug:
+            continue
+
         for name, param in vars(device).items():
             if name == "state":
                 if (
