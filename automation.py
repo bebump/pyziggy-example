@@ -504,6 +504,3 @@ def tv_state_changed():
         if living_room_value_changed:
             living_room.set(old_living_room_value)
             living_room_value_changed = False
-
-
-tv_state.add_listener(tv_state_changed)
