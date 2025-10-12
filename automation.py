@@ -490,13 +490,14 @@ tv_state = Tv(devices.ikea_smart_plug.current)
 old_living_room_value = living_room.get()
 living_room_value_changed = False
 
+
 def tv_state_changed():
     global old_living_room_value, living_room_value_changed
 
     if tv_state.get():
         old_living_room_value = living_room.get()
 
-        if (old_living_room_value > 0.25):
+        if old_living_room_value > 0.25:
             living_room.set(0.2)
             living_room_value_changed = True
     else:
