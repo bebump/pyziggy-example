@@ -1,5 +1,6 @@
 import datetime
 import os
+from enum import Enum
 from typing import Callable, Any
 
 from pyziggy.device_bases import LightWithColorTemp, LightWithColor, LightWithDimming
@@ -24,10 +25,78 @@ from pushover import send_push_notification_to_home_group
 from pyziggy_autogenerate.available_devices import (
     AvailableDevices,
     Philips_RDM002,
+    SONOFF_TRVZB,
 )
 from secrets import get_secret_or_else
 
+
+class Trv:
+    def __init__(self, valve: SONOFF_TRVZB):
+        self.valve = valve
+
+    def turn_off_heating(self):
+        self.valve.occupied_heating_setpoint.set_normalized(0.0)
+
+    def turn_on_heating(self):
+        self.valve.occupied_heating_setpoint.set_normalized(1.0)
+
+
+class Rooms(Enum):
+    OFFICE = "office"
+    LIVING_ROOM = "living_room"
+    KITCHEN = "kitchen"
+    BEDROOM = "bedroom"
+    BATHROOM = "bathroom"
+
+
+requested_temps = {
+    Rooms.OFFICE: 23.5,
+    Rooms.LIVING_ROOM: 23.5,
+    Rooms.KITCHEN: 23.5,
+    Rooms.BEDROOM: 23.5,
+}
+
 devices = AvailableDevices()
+
+trvs = {Rooms.OFFICE: Trv(devices.office_valve)}
+
+temps = {
+    Rooms.OFFICE: devices.office_temp,
+    Rooms.LIVING_ROOM: devices.living_room_temp,
+    Rooms.KITCHEN: devices.living_room_temp,
+    Rooms.BEDROOM: devices.bedroom_temp,
+    Rooms.BATHROOM: devices.bathroom_temp,
+}
+
+
+class TemperatureController:
+    HYSTERESIS = 0.5
+
+    def __init__(self):
+        self._timer = MessageLoopTimer(self._timer_callback)
+        self._timer.start(60)
+
+    def _timer_callback(self, timer: MessageLoopTimer):
+        for room, temp in requested_temps.items():
+            if room in temps:
+                if (
+                    temps[room].temperature.get()
+                    < temp - TemperatureController.HYSTERESIS
+                ):
+                    if room in trvs:
+                        trvs[room].turn_on_heating()
+                elif (
+                    temps[room].temperature.get()
+                    > temp + TemperatureController.HYSTERESIS
+                ):
+                    if room in trvs:
+                        trvs[room].turn_off_heating()
+
+
+temperature_controller = TemperatureController()
+
+
+xmas_lights: list[LightWithColorTemp] = [devices.xmas1, devices.xmas2, devices.xmas3]
 
 kitchen = ScaleMapper(
     [
@@ -42,22 +111,24 @@ kitchen = ScaleMapper(
 
 living_room_with_couch = ScaleMapper(
     [
-        (PlugScalable(devices.plug), 0.0, 0.05),
-        (L2S(devices.standing_lamp), 0.07, 0.7),
-        (L2S(devices.couch), 0.2, 0.7),
+        (PlugScalable(devices.ikea_smart_plug), 0.0, 0.05),
+        (PlugScalable(devices.plug), 0.07, 0.1),
+        # (L2S(devices.standing_lamp), 0.07, 0.7),
+        (L2S(devices.couch), 0.12, 0.7),
         (L2S(devices.tallbyn), 0.7, 1.0),
     ],
-    [0.06],
+    [0.06, 0.11],
     lambda: os.system("afplay /System/Library/Sounds/Tink.aiff &"),
 )
 
 living_room_no_couch = ScaleMapper(
     [
-        (PlugScalable(devices.plug), 0.0, 0.05),
-        (L2S(devices.tallbyn), 0.07, 0.7),
-        (L2S(devices.standing_lamp), 0.5, 1.0),
+        (PlugScalable(devices.ikea_smart_plug), 0.0, 0.05),
+        (PlugScalable(devices.plug), 0.07, 0.1),
+        (L2S(devices.tallbyn), 0.07, 1.0),
+        # (L2S(devices.standing_lamp), 0.5, 1.0),
     ],
-    [0.06, 0.7],
+    [0.06],
     lambda: os.system("afplay /System/Library/Sounds/Tink.aiff &"),
 )
 
@@ -71,27 +142,24 @@ def set_mired(mired):
 
 
 def ikea_remote_action_handler():
-    action = devices.ikea_remote.action.get_enum_value()
-    types = devices.ikea_remote.action.enum_type
-
-    if action == types.brightness_move_up:
-        kitchen.add(0.075)
-    elif action == types.brightness_move_down:
-        kitchen.add(-0.075)
-    elif action == types.on:
-        devices.dining_light_1.state.set(1)
-        devices.dining_light_2.state.set(1)
-    elif action == types.off:
-        devices.dining_light_1.state.set(0)
-        devices.dining_light_2.state.set(0)
-    elif action == types.arrow_left_click:
-        set_mired(417)
-    elif action == types.arrow_right_click:
-        set_mired(370)
+    toggle_office()
 
 
 ikea_remote_action_broadcaster = IkeaN2CommandRepeater(devices.ikea_remote)
 ikea_remote_action_broadcaster.repeating_action.add_listener(ikea_remote_action_handler)
+
+
+def rodret_remote_action_handler():
+    action = devices.rodret.action.get_enum_value()
+    types = devices.rodret.action.enum_type
+
+    if action == types.on:
+        turn_things_back_on()
+    elif action == types.off:
+        turn_off_everything()
+
+
+devices.rodret.action.add_listener(rodret_remote_action_handler)
 
 
 def tradfri_remote_action_handler():
@@ -159,9 +227,6 @@ def turn_off_everything():
     new_device_params_turned_off = []
 
     for device in devices.get_devices():
-        if device == devices.ikea_smart_plug:
-            continue
-
         for name, param in vars(device).items():
             if name == "state":
                 if (
@@ -198,19 +263,15 @@ default_button_mapping = {
 }
 
 
-def switch_living_room_scene(couch: bool | None = None):
-    """If you omit the couch parameter, it will toggle the state."""
+def switch_living_room_scene():
     global living_room
 
-    if couch is None:
-        couch = living_room is not living_room_with_couch
-
-    if couch:
-        living_room = living_room_with_couch
-        devices.couch.state.set(1)
-    else:
+    if living_room is living_room_with_couch:
         living_room = living_room_no_couch
         devices.couch.state.set(0)
+    else:
+        living_room = living_room_with_couch
+        devices.couch.state.set(1)
 
 
 class PhilipsButtonHandler:
@@ -329,7 +390,10 @@ class AutoColorTemp:
 auto_color_temp = AutoColorTemp()
 
 lights_with_color_temp: list[LightWithColorTemp] = [
-    l for l in devices.get_devices() if isinstance(l, LightWithColorTemp)
+    l
+    for l in devices.get_devices()
+    if isinstance(l, LightWithColorTemp)
+    if l not in xmas_lights
 ]
 
 
@@ -386,7 +450,7 @@ morning_lights: list[LightWithDimming] = [
     devices.couch,
     devices.tallbyn,
     devices.hue_lightstrip,
-    devices.standing_lamp,
+    # devices.standing_lamp,
     devices.reading_lamp,
     devices.tokabo,
     devices.printer,
@@ -401,6 +465,7 @@ def turn_on_morning_lights():
         light.brightness.set_normalized(1)
 
     devices.plug.state.set(1)
+    devices.ikea_smart_plug.state.set(1)
 
     for light in [devices.dining_light_1, devices.dining_light_2]:
         light.brightness.set_normalized(0.5)
@@ -408,6 +473,29 @@ def turn_on_morning_lights():
 
 turn_on_lights_in_the_morning = OnceADay(8.5, turn_on_morning_lights)
 devices.on_connect.add_listener(lambda: turn_on_lights_in_the_morning.start())
+
+sunset_lights: list[LightWithDimming] = [devices.fado, devices.lampion, *xmas_lights]
+
+
+def turn_on_sunset_lights():
+    for light in sunset_lights:
+        light.state.set(1)
+        light.brightness.set_normalized(1)
+
+
+sunset = EasyAstral(
+    get_secret_or_else("location", (47.402339, 19.251788, 0.0))
+).get_sunset()
+turn_on_lights_at_sunset = OnceADay(sunset, turn_on_sunset_lights)
+devices.on_connect.add_listener(lambda: turn_on_lights_at_sunset.start())
+
+for device in xmas_lights:
+    device.brightness.add_listener(
+        lambda d=device: d.brightness.set_normalized(0.55)  # type: ignore
+    )
+    device.color_temp.add_listener(
+        lambda d=device: d.color_temp.set_normalized(1.0)  # type: ignore
+    )
 
 
 class WaterSensorAlert:
@@ -455,15 +543,11 @@ class Tv(Broadcaster):
     def __init__(self, current: NumericParameter):
         super().__init__()
         self._is_on: bool | None = False
-        self._timer = MessageLoopTimer(self._timer_callback)
 
         current.add_listener(self._current_listener)
 
-    def _timer_callback(self, t: MessageLoopTimer):
-        self._call_listeners()
-
     def _current_listener(self):
-        new_is_on = devices.ikea_smart_plug.current.get() > 0.28
+        new_is_on = devices.ikea_smart_plug.current.get() > 0.4
 
         if self._is_on is None:
             self._is_on = new_is_on
@@ -472,11 +556,8 @@ class Tv(Broadcaster):
         state_changed = self._is_on != new_is_on
         self._is_on = new_is_on
 
-        # Debouncing the TV state. When on a black screen the current can drop down
-        # to a very low value. start() aborts/resets an already running timer, so the
-        # callback will only be called if the TV state remained the same for 10 secs.
         if state_changed:
-            self._timer.start(10)
+            self._call_listeners()
 
     def get(self) -> bool:
         if self._is_on is None:
@@ -486,21 +567,3 @@ class Tv(Broadcaster):
 
 
 tv_state = Tv(devices.ikea_smart_plug.current)
-
-old_living_room_value = living_room.get()
-living_room_value_changed = False
-
-
-def tv_state_changed():
-    global old_living_room_value, living_room_value_changed
-
-    if tv_state.get():
-        old_living_room_value = living_room.get()
-
-        if old_living_room_value > 0.25:
-            living_room.set(0.2)
-            living_room_value_changed = True
-    else:
-        if living_room_value_changed:
-            living_room.set(old_living_room_value)
-            living_room_value_changed = False

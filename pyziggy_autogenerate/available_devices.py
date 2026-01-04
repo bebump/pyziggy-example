@@ -149,6 +149,29 @@ class Enum11(Enum):
     stop_effect = "stop_effect"
 
 
+class Enum12(Enum):
+    brightness_move_down = "brightness_move_down"
+    brightness_move_to_level = "brightness_move_to_level"
+    brightness_move_up = "brightness_move_up"
+    brightness_step_down = "brightness_step_down"
+    brightness_step_up = "brightness_step_up"
+    brightness_stop = "brightness_stop"
+    off = "off"
+    on = "on"
+    toggle = "toggle"
+
+
+class Enum13(Enum):
+    heat = "heat"
+    idle = "idle"
+
+
+class Enum14(Enum):
+    auto = "auto"
+    heat = "heat"
+    off = "off"
+
+
 class EnumParameterForEnum0(EnumParameter):
     def __init__(self, property: str, enum_values: List[str]):
         super().__init__(property, enum_values)
@@ -183,6 +206,33 @@ class EnumParameterForEnum11(EnumParameter):
 
     def get_enum_value(self) -> Enum11:
         return _int_to_enum(Enum11, int(self.get()))
+
+
+class EnumParameterForEnum12(EnumParameter):
+    def __init__(self, property: str, enum_values: List[str]):
+        super().__init__(property, enum_values)
+        self.enum_type = Enum12
+
+    def get_enum_value(self) -> Enum12:
+        return _int_to_enum(Enum12, int(self.get()))
+
+
+class EnumParameterForEnum13(EnumParameter):
+    def __init__(self, property: str, enum_values: List[str]):
+        super().__init__(property, enum_values)
+        self.enum_type = Enum13
+
+    def get_enum_value(self) -> Enum13:
+        return _int_to_enum(Enum13, int(self.get()))
+
+
+class EnumParameterForEnum14(EnumParameter):
+    def __init__(self, property: str, enum_values: List[str]):
+        super().__init__(property, enum_values)
+        self.enum_type = Enum14
+
+    def get_enum_value(self) -> Enum14:
+        return _int_to_enum(Enum14, int(self.get()))
 
 
 class EnumParameterForEnum2(EnumParameter):
@@ -262,6 +312,11 @@ class SettableEnumParameterForEnum11(SettableEnumParameter, EnumParameterForEnum
         self.set(self._transform_mqtt_to_internal_value(value.value))
 
 
+class SettableEnumParameterForEnum14(SettableEnumParameter, EnumParameterForEnum14):
+    def set_enum_value(self, value: Enum14) -> None:
+        self.set(self._transform_mqtt_to_internal_value(value.value))
+
+
 class SettableEnumParameterForEnum3(SettableEnumParameter, EnumParameterForEnum3):
     def set_enum_value(self, value: Enum3) -> None:
         self.set(self._transform_mqtt_to_internal_value(value.value))
@@ -316,6 +371,11 @@ class CompositeParameterVariant2(CompositeParameter):
     def __init__(self, property: str, arg0, arg1, arg2, arg3):
         self.hue = SettableAndQueryableNumericParameter("hue", arg0, arg1)
         self.saturation = SettableAndQueryableNumericParameter("saturation", arg2, arg3)
+        CompositeParameter.__init__(self, property)
+
+
+class CompositeParameterVariant3(CompositeParameter):
+    def __init__(self, property: str):
         CompositeParameter.__init__(self, property)
 
 
@@ -396,6 +456,14 @@ class IKEA_TRADFRI_remote_control(Device):
         Device.__init__(self, name)
 
 
+class IKEA_of_Sweden_RODRET_wireless_dimmer(Device):
+    def __init__(self, name):
+        self.action = EnumParameterForEnum12("action", [e.value for e in Enum12])
+        self.battery = QueryableNumericParameter("battery", 0, 100)
+        self.linkquality = NumericParameter("linkquality", 0, 255)
+        Device.__init__(self, name)
+
+
 class Innr_RB_248_T(Device, LightWithColorTemp):
     def __init__(self, name):
         LightWithColorTemp.__init__(self, 0, 254, 153, 555)
@@ -459,6 +527,27 @@ class SONOFF_SNZB_02P(Device):
         Device.__init__(self, name)
 
 
+class SONOFF_TRVZB(Device):
+    def __init__(self, name):
+        self.battery = NumericParameter("battery", 0, 100)
+        self.closing_steps = QueryableNumericParameter("closing_steps", -2147483648, 2147483647)
+        self.frost_protection_temperature = SettableAndQueryableNumericParameter("frost_protection_temperature", 4, 35)
+        self.idle_steps = QueryableNumericParameter("idle_steps", -2147483648, 2147483647)
+        self.linkquality = NumericParameter("linkquality", 0, 255)
+        self.local_temperature = QueryableNumericParameter("local_temperature", -2147483648, 2147483647)
+        self.local_temperature_calibration = SettableAndQueryableNumericParameter("local_temperature_calibration", -12.8, 12.7)
+        self.occupied_heating_setpoint = SettableAndQueryableNumericParameter("occupied_heating_setpoint", 4, 35)
+        self.running_state = EnumParameterForEnum13("running_state", [e.value for e in Enum13])
+        self.system_mode = SettableEnumParameterForEnum14("system_mode", [e.value for e in Enum14])
+        self.valve_closing_degree = SettableAndQueryableNumericParameter("valve_closing_degree", 0, 100)
+        self.valve_closing_limit_voltage = QueryableNumericParameter("valve_closing_limit_voltage", -2147483648, 2147483647)
+        self.valve_motor_running_voltage = QueryableNumericParameter("valve_motor_running_voltage", -2147483648, 2147483647)
+        self.valve_opening_degree = SettableAndQueryableNumericParameter("valve_opening_degree", 0, 100)
+        self.valve_opening_limit_voltage = QueryableNumericParameter("valve_opening_limit_voltage", -2147483648, 2147483647)
+        self.schedule = CompositeParameterVariant3("weekly_schedule")
+        Device.__init__(self, name)
+
+
 class Tuya_TS011F(Device):
     def __init__(self, name):
         self.countdown = SettableAndQueryableNumericParameter("countdown", 0, 43200)
@@ -503,4 +592,9 @@ class AvailableDevices(DevicesClient):
         self.dishwasher_leak_sensor = IKEA_BADRING_Water_Leakage_Sensor("dishwasher leak sensor")
         self.kitchen_light = IKEA_STOFTMOLN_ceiling_wall_lamp_WW37("Kitchen Light")
         self.ikea_smart_plug = IKEA_INSPELNING_Smart_plug("Ikea Smart Plug")
+        self.xmas1 = IKEA_TRADFRI_bulb_E14_WS_globe_470lm("Xmas1")
+        self.xmas2 = IKEA_TRADFRI_bulb_E14_WS_globe_470lm("Xmas2")
+        self.xmas3 = IKEA_TRADFRI_bulb_E14_WS_globe_470lm("Xmas3")
+        self.rodret = IKEA_of_Sweden_RODRET_wireless_dimmer("Rodret")
+        self.office_valve = SONOFF_TRVZB("Office valve")
 

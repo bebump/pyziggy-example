@@ -8,6 +8,7 @@ from pyziggy_autogenerate.available_devices import (
     IKEA_Remote_Control_N2,
     Philips_RDM002,
     Tuya_TS011F,
+    IKEA_INSPELNING_Smart_plug,
 )
 
 
@@ -110,7 +111,7 @@ class PhilipsTapDialRotaryHelper:
 
 
 class PlugScalable(Scalable):
-    def __init__(self, plug: Tuya_TS011F):
+    def __init__(self, plug: Tuya_TS011F | IKEA_INSPELNING_Smart_plug):
         self._plug = plug
         self._last_value = 0.0
 
