@@ -40,6 +40,9 @@ class Trv:
     def turn_on_heating(self):
         self.valve.occupied_heating_setpoint.set_normalized(1.0)
 
+    def set_fallback_temperature(self, temperature: float):
+        self.valve.occupied_heating_setpoint.set(temperature)
+
 
 class Rooms(Enum):
     OFFICE = "office"
@@ -84,18 +87,16 @@ class TemperatureController:
     def _timer_callback(self, timer: MessageLoopTimer):
         for room, temp in requested_temps.items():
             if room in temps:
-                if (
-                    temps[room].temperature.get()
-                    < temp - TemperatureController.HYSTERESIS
-                ):
-                    if room in trvs:
-                        trvs[room].turn_on_heating()
-                elif (
-                    temps[room].temperature.get()
-                    > temp + TemperatureController.HYSTERESIS
-                ):
-                    if room in trvs:
-                        trvs[room].turn_off_heating()
+                if room not in trvs:
+                    continue
+
+                current_temp = temps[room].temperature.get()
+                if current_temp == 0.0:
+                    trvs[room].set_fallback_temperature(temp)
+                elif current_temp < temp - TemperatureController.HYSTERESIS:
+                    trvs[room].turn_on_heating()
+                elif current_temp > temp + TemperatureController.HYSTERESIS:
+                    trvs[room].turn_off_heating()
 
 
 temperature_controller = TemperatureController()
