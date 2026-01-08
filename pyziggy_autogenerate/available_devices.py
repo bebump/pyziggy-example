@@ -434,19 +434,6 @@ class IKEA_TRADFRI_bulb_E14_WS_globe_470lm(Device, LightWithColorTemp):
         Device.__init__(self, name)
 
 
-class IKEA_TRADFRI_bulb_E27_CWS_globe_806lm(Device, LightWithColor):
-    def __init__(self, name):
-        LightWithColor.__init__(self, 0, 254, 250, 454, -2147483648, 2147483647, -2147483648, 2147483647, -2147483648, 2147483647, -2147483648, 2147483647)
-        self.color_options = CompositeParameterVariant("color_options")
-        self.color_temp_startup = SettableAndQueryableNumericParameter("color_temp_startup", 250, 454)
-        self.effect = SettableEnumParameterForEnum11("effect", [e.value for e in Enum11])
-        self.identify = SettableEnumParameterForEnum5("identify", [e.value for e in Enum5])
-        self.level_config = CompositeParameterVariant0("level_config", 1, 254)
-        self.linkquality = NumericParameter("linkquality", 0, 255)
-        self.power_on_behavior = SettableEnumParameterForEnum4("power_on_behavior", [e.value for e in Enum4])
-        Device.__init__(self, name)
-
-
 class IKEA_TRADFRI_remote_control(Device):
     def __init__(self, name):
         self.action = EnumParameterForEnum9("action", [e.value for e in Enum9])
@@ -583,7 +570,6 @@ class AvailableDevices(DevicesClient):
         self.couch = Philips_LCL007("Couch")
         self.bathroom_temp = SONOFF_SNZB_02P("Bathroom temp")
         self.switch_kitchen = Philips_RDM002("Switch Kitchen")
-        self.color_bulb = IKEA_TRADFRI_bulb_E27_CWS_globe_806lm("Color bulb")
         self.printer = Innr_RB_248_T("Printer")
         self.switch_poang = Philips_RDM002("Switch Poang")
         self.a0x001788010ea91642 = Philips_LCL007("0x001788010ea91642")
