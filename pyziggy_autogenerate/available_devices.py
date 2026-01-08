@@ -572,7 +572,6 @@ class AvailableDevices(DevicesClient):
         self.switch_kitchen = Philips_RDM002("Switch Kitchen")
         self.printer = Innr_RB_248_T("Printer")
         self.switch_poang = Philips_RDM002("Switch Poang")
-        self.a0x001788010ea91642 = Philips_LCL007("0x001788010ea91642")
         self.standing_lamp = Innr_RB_279_T("Standing Lamp")
         self.tallbyn = Innr_RB_279_T("Tallbyn")
         self.dishwasher_leak_sensor = IKEA_BADRING_Water_Leakage_Sensor("dishwasher leak sensor")
