@@ -583,4 +583,7 @@ class AvailableDevices(DevicesClient):
         self.xmas3 = IKEA_TRADFRI_bulb_E14_WS_globe_470lm("Xmas3")
         self.rodret = IKEA_of_Sweden_RODRET_wireless_dimmer("Rodret")
         self.office_valve = SONOFF_TRVZB("Office valve")
+        self.bedroom_valve = SONOFF_TRVZB("Bedroom valve")
+        self.kitchen_valve = SONOFF_TRVZB("Kitchen valve")
+        self.living_room_valve = SONOFF_TRVZB("Living room valve")
 

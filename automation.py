@@ -53,12 +53,17 @@ requested_temps = {
     Rooms.OFFICE: 23.5,
     Rooms.LIVING_ROOM: 23.5,
     Rooms.KITCHEN: 23.5,
-    Rooms.BEDROOM: 23.5,
+    Rooms.BEDROOM: 22.5,
 }
 
 devices = AvailableDevices()
 
-trvs = {Rooms.OFFICE: Trv(devices.office_valve)}
+trvs = {
+    Rooms.OFFICE: Trv(devices.office_valve),
+    Rooms.BEDROOM: Trv(devices.bedroom_valve),
+    Rooms.KITCHEN: Trv(devices.kitchen_valve),
+    Rooms.LIVING_ROOM: Trv(devices.living_room_valve),
+}
 
 temps = {
     Rooms.OFFICE: devices.office_temp,
