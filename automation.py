@@ -54,8 +54,8 @@ class Rooms(Enum):
 
 requested_temps = {
     Rooms.OFFICE: 23.5,
-    Rooms.LIVING_ROOM: 23.5,
-    Rooms.KITCHEN: 23.5,
+    Rooms.LIVING_ROOM: 24,
+    Rooms.KITCHEN: 24,
     Rooms.BEDROOM: 22.5,
 }
 
