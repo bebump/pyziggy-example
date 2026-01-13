@@ -102,8 +102,6 @@ class TemperatureController:
 temperature_controller = TemperatureController()
 
 
-xmas_lights: list[LightWithColorTemp] = [devices.xmas1, devices.xmas2, devices.xmas3]
-
 kitchen = ScaleMapper(
     [
         (L2S(devices.hue_lightstrip), 0.0, 0.54),
@@ -396,10 +394,7 @@ class AutoColorTemp:
 auto_color_temp = AutoColorTemp()
 
 lights_with_color_temp: list[LightWithColorTemp] = [
-    l
-    for l in devices.get_devices()
-    if isinstance(l, LightWithColorTemp)
-    if l not in xmas_lights
+    l for l in devices.get_devices() if isinstance(l, LightWithColorTemp)
 ]
 
 
@@ -480,7 +475,7 @@ def turn_on_morning_lights():
 turn_on_lights_in_the_morning = OnceADay(8.5, turn_on_morning_lights)
 devices.on_connect.add_listener(lambda: turn_on_lights_in_the_morning.start())
 
-sunset_lights: list[LightWithDimming] = [devices.fado, devices.lampion, *xmas_lights]
+sunset_lights: list[LightWithDimming] = [devices.fado, devices.lampion]
 
 
 def turn_on_sunset_lights():
@@ -494,14 +489,6 @@ sunset = EasyAstral(
 ).get_sunset()
 turn_on_lights_at_sunset = OnceADay(sunset, turn_on_sunset_lights)
 devices.on_connect.add_listener(lambda: turn_on_lights_at_sunset.start())
-
-for device in xmas_lights:
-    device.brightness.add_listener(
-        lambda d=device: d.brightness.set_normalized(0.55)  # type: ignore
-    )
-    device.color_temp.add_listener(
-        lambda d=device: d.color_temp.set_normalized(1.0)  # type: ignore
-    )
 
 
 class WaterSensorAlert:
