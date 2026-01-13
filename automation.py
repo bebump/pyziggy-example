@@ -52,12 +52,28 @@ class Rooms(Enum):
     BATHROOM = "bathroom"
 
 
-requested_temps = {
-    Rooms.OFFICE: 23.5,
-    Rooms.LIVING_ROOM: 24,
-    Rooms.KITCHEN: 24,
-    Rooms.BEDROOM: 22.5,
-}
+def get_requested_temps():
+    now_decimal = EasyAstral.get_now_decimal()
+
+    daytime = {
+        Rooms.OFFICE: 23.2,
+        Rooms.LIVING_ROOM: 24,
+        Rooms.KITCHEN: 24,
+        Rooms.BEDROOM: 22.3,
+    }
+
+    if 7 <= now_decimal <= 24:
+        return daytime
+
+    nighttime = {
+        Rooms.OFFICE: daytime[Rooms.OFFICE] - 1.2,
+        Rooms.LIVING_ROOM: daytime[Rooms.LIVING_ROOM] - 1.2,
+        Rooms.KITCHEN: daytime[Rooms.KITCHEN] - 1.2,
+        Rooms.BEDROOM: daytime[Rooms.BEDROOM],
+    }
+
+    return nighttime
+
 
 devices = AvailableDevices()
 
@@ -78,14 +94,14 @@ temps = {
 
 
 class TemperatureController:
-    HYSTERESIS = 0.5
+    HYSTERESIS = 0.3
 
     def __init__(self):
         self._timer = MessageLoopTimer(self._timer_callback)
         self._timer.start(60)
 
     def _timer_callback(self, timer: MessageLoopTimer):
-        for room, temp in requested_temps.items():
+        for room, temp in get_requested_temps().items():
             if room in temps:
                 if room not in trvs:
                     continue
@@ -93,9 +109,9 @@ class TemperatureController:
                 current_temp = temps[room].temperature.get()
                 if current_temp == 0.0:
                     trvs[room].set_fallback_temperature(temp)
-                elif current_temp < temp - TemperatureController.HYSTERESIS:
+                elif current_temp <= temp - TemperatureController.HYSTERESIS:
                     trvs[room].turn_on_heating()
-                elif current_temp > temp + TemperatureController.HYSTERESIS:
+                elif current_temp >= temp + TemperatureController.HYSTERESIS:
                     trvs[room].turn_off_heating()
 
 
