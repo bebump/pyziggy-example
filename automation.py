@@ -59,7 +59,7 @@ def get_requested_temps():
         Rooms.OFFICE: 23.2,
         Rooms.LIVING_ROOM: 24,
         Rooms.KITCHEN: 24,
-        Rooms.BEDROOM: 22.3,
+        Rooms.BEDROOM: 22.4,
     }
 
     if 7 <= now_decimal <= 24:
