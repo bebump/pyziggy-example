@@ -1,6 +1,5 @@
 import datetime
 import os
-from enum import Enum
 from typing import Callable, Any
 
 from pyziggy.device_bases import LightWithColorTemp, LightWithColor, LightWithDimming
@@ -21,102 +20,13 @@ from device_helpers import (
     PhilipsTapDialRotaryHelper,
     PlugScalable,
 )
+from devices import devices
 from pushover import send_push_notification_to_home_group
-from pyziggy_autogenerate.available_devices import (
-    AvailableDevices,
-    Philips_RDM002,
-    SONOFF_TRVZB,
-)
+from pyziggy_autogenerate.available_devices import Philips_RDM002
 from secrets import get_secret_or_else
-
-
-class Trv:
-    def __init__(self, valve: SONOFF_TRVZB):
-        self.valve = valve
-
-    def turn_off_heating(self):
-        self.valve.occupied_heating_setpoint.set_normalized(0.0)
-
-    def turn_on_heating(self):
-        self.valve.occupied_heating_setpoint.set_normalized(1.0)
-
-    def set_fallback_temperature(self, temperature: float):
-        self.valve.occupied_heating_setpoint.set(temperature)
-
-
-class Rooms(Enum):
-    OFFICE = "office"
-    LIVING_ROOM = "living_room"
-    KITCHEN = "kitchen"
-    BEDROOM = "bedroom"
-    BATHROOM = "bathroom"
-
-
-def get_requested_temps():
-    now_decimal = EasyAstral.get_now_decimal()
-
-    daytime = {
-        Rooms.OFFICE: 23.2,
-        Rooms.LIVING_ROOM: 24,
-        Rooms.KITCHEN: 24,
-        Rooms.BEDROOM: 22.4,
-    }
-
-    if 7 <= now_decimal <= 24:
-        return daytime
-
-    nighttime = {
-        Rooms.OFFICE: daytime[Rooms.OFFICE] - 1.2,
-        Rooms.LIVING_ROOM: daytime[Rooms.LIVING_ROOM] - 1.2,
-        Rooms.KITCHEN: daytime[Rooms.KITCHEN] - 1.2,
-        Rooms.BEDROOM: daytime[Rooms.BEDROOM],
-    }
-
-    return nighttime
-
-
-devices = AvailableDevices()
-
-trvs = {
-    Rooms.OFFICE: Trv(devices.office_valve),
-    Rooms.BEDROOM: Trv(devices.bedroom_valve),
-    Rooms.KITCHEN: Trv(devices.kitchen_valve),
-    Rooms.LIVING_ROOM: Trv(devices.living_room_valve),
-}
-
-temps = {
-    Rooms.OFFICE: devices.office_temp,
-    Rooms.LIVING_ROOM: devices.living_room_temp,
-    Rooms.KITCHEN: devices.living_room_temp,
-    Rooms.BEDROOM: devices.bedroom_temp,
-    Rooms.BATHROOM: devices.bathroom_temp,
-}
-
-
-class TemperatureController:
-    HYSTERESIS = 0.3
-
-    def __init__(self):
-        self._timer = MessageLoopTimer(self._timer_callback)
-        self._timer.start(60)
-
-    def _timer_callback(self, timer: MessageLoopTimer):
-        for room, temp in get_requested_temps().items():
-            if room in temps:
-                if room not in trvs:
-                    continue
-
-                current_temp = temps[room].temperature.get()
-                if current_temp == 0.0:
-                    trvs[room].set_fallback_temperature(temp)
-                elif current_temp <= temp - TemperatureController.HYSTERESIS:
-                    trvs[room].turn_on_heating()
-                elif current_temp >= temp + TemperatureController.HYSTERESIS:
-                    trvs[room].turn_off_heating()
-
+from temperature import TemperatureController
 
 temperature_controller = TemperatureController()
-
 
 kitchen = ScaleMapper(
     [

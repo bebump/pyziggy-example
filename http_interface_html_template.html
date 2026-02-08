@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="10">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home automation commands</title>
     <style>
@@ -57,7 +58,7 @@
     </style>
     <script>
     function sendData(data) {
-      fetch('/pyziggy/post', {
+      fetch('/pyziggy/api/post_command', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

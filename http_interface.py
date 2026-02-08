@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 from automation import (
     turn_off_everything,
@@ -83,11 +83,12 @@ def http_pyziggy_help():
         {"action": "toggle_couch"},
     ]
 
-    html = make_html("Send commands to <code>/pyziggy/post</code>.", commands)
+    description = "Send commands to <code>/pyziggy/api/post_command</code>."
+    html = make_html(description, commands)
     return html, 200
 
 
-@app.route("/pyziggy/post", methods=["POST"])
+@app.route("/pyziggy/api/post_command", methods=["POST"])
 def http_pyziggy_post():
     payload = request.get_json()
 
@@ -97,3 +98,52 @@ def http_pyziggy_post():
     message_loop.post_message(message_callback)
 
     return "", 200
+
+
+@app.route("/pyziggy/rooms")
+def http_rooms_gui():
+    with open(rel_to_py("rooms_gui.html"), "r") as file:
+        return file.read(), 200
+
+
+@app.route("/pyziggy/api/room_infos")
+def http_room_infos():
+    """
+    Returns an info object for each room. An example output is shown below.
+
+    {
+        "office": {
+            "controllable": true,
+            "target_temperature": 22.0,
+            "max_allowed_deviation_from_target": 0.3,
+            "heating_on": false
+        },
+        "living_room": {
+            "controllable": true,
+            "target_temperature": 22.8,
+            "max_allowed_deviation_from_target": 0.3,
+            "heating_on": false
+        },
+        "kitchen": {
+            "controllable": true,
+            "target_temperature": 22.8,
+            "max_allowed_deviation_from_target": 0.3,
+            "heating_on": false
+        },
+        "bedroom": {
+            "controllable": true,
+            "target_temperature": 22.4,
+            "max_allowed_deviation_from_target": 0.3,
+            "heating_on": false
+        },
+        "bathroom": {
+            "controllable": false,
+            "target_temperature": 0,
+            "max_allowed_deviation_from_target": 0.3,
+            "heating_on": false
+        }
+    }
+    """
+
+    from temperature import get_room_infos
+    return jsonify(get_room_infos())
