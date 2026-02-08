@@ -576,3 +576,17 @@ class Tv(Broadcaster):
 
 
 tv_state = Tv(devices.ikea_smart_plug.current)
+
+
+def tokabo_handler(timer: MessageLoopTimer):
+    # This is an annoying bulb that reduces its brightness by about 10 percent
+    # every hour for absolutely no discernible reason. And then it doesn't even
+    # report it, so even Zigbee2MQTT is unaware of this constant change.
+    #
+    # I'm going to force it to stay at my desired level.
+    if devices.tokabo.state.get() == 1:
+        devices.tokabo.brightness.set_normalized(0.7)
+
+
+tokabo_timer = MessageLoopTimer(tokabo_handler)
+tokabo_timer.start(120)
