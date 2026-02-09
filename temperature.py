@@ -134,4 +134,4 @@ temperature_data = PersistentData(
 )
 
 save_temperature_data_timer = MessageLoopTimer(lambda timer: temperature_data.save())
-save_temperature_data_timer.start(5)
+save_temperature_data_timer.start(300)
