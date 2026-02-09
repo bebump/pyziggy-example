@@ -1,9 +1,11 @@
 from enum import Enum
+from pathlib import Path
 
 from pyziggy.message_loop import MessageLoopTimer
 
 from astral_mired import EasyAstral
 from devices import devices
+from persistent_data import PersistentData
 from pyziggy_autogenerate.available_devices import SONOFF_TRVZB
 
 
@@ -103,7 +105,9 @@ def get_room_infos():
 
         room_info = {
             "controllable": room in trvs,
-            "current_temperature": temps[room].temperature.get() if room in temps else 0,
+            "current_temperature": (
+                temps[room].temperature.get() if room in temps else 0
+            ),
             "target_temperature": target_temp,
             "max_allowed_deviation_from_target": TemperatureController.HYSTERESIS,
             "heating_on": (
@@ -116,3 +120,18 @@ def get_room_infos():
         room_infos[room.value] = room_info
 
     return room_infos
+
+
+# ==============================================================================
+def temperature_data_source():
+    return {
+        room.value: temps[room].temperature.get() for room in Rooms if room in temps
+    }
+
+
+temperature_data = PersistentData(
+    Path.home() / "pyziggy_temperature_data.csv", temperature_data_source
+)
+
+save_temperature_data_timer = MessageLoopTimer(lambda timer: temperature_data.save())
+save_temperature_data_timer.start(5)
