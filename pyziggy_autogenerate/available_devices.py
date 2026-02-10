@@ -348,15 +348,15 @@ class SettableEnumParameterForEnum8(SettableEnumParameter, EnumParameterForEnum8
 
 
 class CompositeParameterVariant(CompositeParameter):
-    def __init__(self, property: str):
-        self.execute_if_off = SettableBinaryParameter("execute_if_off")
+    def __init__(self, property: str, arg0, arg1):
+        self.execute_if_off = SettableAndQueryableBinaryParameter("execute_if_off")
+        self.current_level_startup = SettableAndQueryableNumericParameter("current_level_startup", arg0, arg1)
         CompositeParameter.__init__(self, property)
 
 
 class CompositeParameterVariant0(CompositeParameter):
-    def __init__(self, property: str, arg0, arg1):
-        self.execute_if_off = SettableAndQueryableBinaryParameter("execute_if_off")
-        self.current_level_startup = SettableAndQueryableNumericParameter("current_level_startup", arg0, arg1)
+    def __init__(self, property: str):
+        self.execute_if_off = SettableBinaryParameter("execute_if_off")
         CompositeParameter.__init__(self, property)
 
 
@@ -415,7 +415,7 @@ class IKEA_STOFTMOLN_ceiling_wall_lamp_WW37(Device, LightWithDimming):
         LightWithDimming.__init__(self, 0, 254)
         self.effect = SettableEnumParameterForEnum3("effect", [e.value for e in Enum3])
         self.identify = SettableEnumParameterForEnum5("identify", [e.value for e in Enum5])
-        self.level_config = CompositeParameterVariant0("level_config", 1, 254)
+        self.level_config = CompositeParameterVariant("level_config", 1, 254)
         self.linkquality = NumericParameter("linkquality", 0, 255)
         self.power_on_behavior = SettableEnumParameterForEnum4("power_on_behavior", [e.value for e in Enum4])
         Device.__init__(self, name)
@@ -424,11 +424,11 @@ class IKEA_STOFTMOLN_ceiling_wall_lamp_WW37(Device, LightWithDimming):
 class IKEA_TRADFRI_bulb_E14_WS_globe_470lm(Device, LightWithColorTemp):
     def __init__(self, name):
         LightWithColorTemp.__init__(self, 0, 254, 250, 454)
-        self.color_options = CompositeParameterVariant("color_options")
+        self.color_options = CompositeParameterVariant0("color_options")
         self.color_temp_startup = SettableAndQueryableNumericParameter("color_temp_startup", 250, 454)
         self.effect = SettableEnumParameterForEnum3("effect", [e.value for e in Enum3])
         self.identify = SettableEnumParameterForEnum5("identify", [e.value for e in Enum5])
-        self.level_config = CompositeParameterVariant0("level_config", 1, 254)
+        self.level_config = CompositeParameterVariant("level_config", 1, 254)
         self.linkquality = NumericParameter("linkquality", 0, 255)
         self.power_on_behavior = SettableEnumParameterForEnum4("power_on_behavior", [e.value for e in Enum4])
         Device.__init__(self, name)
@@ -556,8 +556,9 @@ class AvailableDevices(DevicesClient):
         self.reading_lamp = Innr_RB_249_T("Reading Lamp")
         self.dining_light_1 = Innr_RB_279_T("Dining Light 1")
         self.dining_light_2 = Innr_RB_279_T("Dining Light 2")
+        self.standing_lamp = Innr_RB_279_T("Standing Lamp")
+        self.kitchen_light = IKEA_STOFTMOLN_ceiling_wall_lamp_WW37("Kitchen Light")
         self.lampion = Innr_RB_249_T("Lampion")
-        self.fado = Innr_RB_279_T("Fado")
         self.desk_lamp = IKEA_TRADFRI_bulb_E14_WS_globe_470lm("Desk Lamp")
         self.tokabo = IKEA_TRADFRI_bulb_E14_WS_globe_470lm("Tokabo")
         self.hue_lightstrip = Philips_LCL007("Hue lightstrip")
@@ -568,18 +569,17 @@ class AvailableDevices(DevicesClient):
         self.ikea_remote = IKEA_Remote_Control_N2("Ikea remote")
         self.office_temp = SONOFF_SNZB_02P("Office temp")
         self.couch = Philips_LCL007("Couch")
+        self.dishwasher_leak_sensor = IKEA_BADRING_Water_Leakage_Sensor("dishwasher leak sensor")
         self.bathroom_temp = SONOFF_SNZB_02P("Bathroom temp")
         self.switch_kitchen = Philips_RDM002("Switch Kitchen")
         self.printer = Innr_RB_248_T("Printer")
         self.switch_poang = Philips_RDM002("Switch Poang")
-        self.standing_lamp = Innr_RB_279_T("Standing Lamp")
-        self.dishwasher_leak_sensor = IKEA_BADRING_Water_Leakage_Sensor("dishwasher leak sensor")
-        self.kitchen_light = IKEA_STOFTMOLN_ceiling_wall_lamp_WW37("Kitchen Light")
         self.ikea_smart_plug = IKEA_INSPELNING_Smart_plug("Ikea Smart Plug")
         self.rodret = IKEA_of_Sweden_RODRET_wireless_dimmer("Rodret")
         self.office_valve = SONOFF_TRVZB("Office valve")
         self.bedroom_valve = SONOFF_TRVZB("Bedroom valve")
-        self.kitchen_valve = SONOFF_TRVZB("Kitchen valve")
         self.living_room_valve = SONOFF_TRVZB("Living room valve")
         self.tallbyn = Innr_RB_279_T("Tallbyn")
+        self.kitchen_valve = SONOFF_TRVZB("Kitchen valve")
+        self.fado = Innr_RB_279_T("Fado")
 
