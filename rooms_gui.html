@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Temperatures</title>
     <script src="https://cdn.rawgit.com/Mikhus/canvas-gauges/master/gauge.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.3.1/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,9 +15,17 @@
             margin: 0;
             padding: 20px;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #rooms-container {
+            display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 20px;
+            width: 100%;
         }
 
         .room-card {
@@ -31,6 +42,17 @@
 
         .room-card:hover {
             transform: translateY(-5px);
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            width: 95%;
+            max-width: 1200px;
+            height: 400px;
+            margin-bottom: 40px;
         }
 
         .room-name {
@@ -80,11 +102,97 @@
     </style>
 </head>
 <body>
-    <div id="rooms-container" style="display: contents;"></div>
+    <div id="rooms-container"></div>
+    
+    <div class="chart-card">
+        <canvas id="temperature-chart"></canvas>
+    </div>
+
     <div class="last-update" id="last-update">Last update: Never</div>
 
     <script>
         const gauges = {};
+        let temperatureChart = null;
+
+        const roomColors = {
+            'office': 'rgba(255, 99, 132, 1)',
+            'living_room': 'rgba(54, 162, 235, 1)',
+            'kitchen': 'rgba(255, 206, 86, 1)',
+            'bedroom': 'rgba(75, 192, 192, 1)',
+            'bathroom': 'rgba(153, 102, 255, 1)'
+        };
+
+        function initChart() {
+            const ctx = document.getElementById('temperature-chart').getContext('2d');
+            temperatureChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'hour',
+                                displayFormats: {
+                                    hour: 'HH:mm'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Historical Temperature Data'
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 0 // Hide points for better performance
+                        },
+                        line: {
+                            borderWidth: 2,
+                            tension: 0.3
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            fetch('/pyziggy/api/temperature_data')
+                .then(response => response.json())
+                .then(data => {
+                    const datasets = [];
+                    for (const [roomKey, points] of Object.entries(data)) {
+                        datasets.push({
+                            label: roomKey.replace('_', ' '),
+                            data: points.map(p => ({ x: new Date(p[0]), y: p[1] })),
+                            borderColor: roomColors[roomKey] || `hsl(${Math.random() * 360}, 70%, 50%)`,
+                            backgroundColor: 'transparent',
+                        });
+                    }
+                    temperatureChart.data.datasets = datasets;
+                    temperatureChart.update();
+                })
+                .catch(error => console.error('Error fetching temperature data:', error));
+        }
 
         function createGauge(id, container, name) {
             const canvas = document.createElement('canvas');
@@ -201,9 +309,14 @@
 
         // Initial fetch
         updateRooms();
+        initChart();
+        updateChart();
 
-        // Update every 10 seconds
+        // Update rooms every 10 seconds
         setInterval(updateRooms, 10000);
+        
+        // Update chart every 5 minutes
+        setInterval(updateChart, 300000);
     </script>
 </body>
 </html>
