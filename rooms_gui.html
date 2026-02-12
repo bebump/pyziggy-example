@@ -51,8 +51,46 @@
             padding: 20px;
             width: 95%;
             max-width: 1200px;
-            height: 400px;
+            height: 500px;
             margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .control-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .range-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin: 0 10px;
+            font-weight: bold;
         }
 
         .room-name {
@@ -105,6 +143,20 @@
     <div id="rooms-container"></div>
     
     <div class="chart-card">
+        <div class="chart-controls">
+            <button class="control-btn" onclick="panTime(-1)">◀ Prev</button>
+            <div id="range-buttons">
+                <button class="control-btn" onclick="setRange(1)">24h</button>
+                <button class="control-btn" onclick="setRange(3)">3d</button>
+                <button class="control-btn" onclick="setRange(7)">7d</button>
+                <button class="control-btn" onclick="setRange(10)" id="default-range-btn">10d</button>
+                <button class="control-btn" onclick="setRange(30)">30d</button>
+                <button class="control-btn" onclick="setRange(0)">All</button>
+            </div>
+            <button class="control-btn" onclick="panTime(1)">Next ▶</button>
+            <button class="control-btn" onclick="resetToNow()">Now</button>
+            <div class="range-info" id="range-info"></div>
+        </div>
         <canvas id="temperature-chart"></canvas>
     </div>
 
@@ -113,6 +165,8 @@
     <script>
         const gauges = {};
         let temperatureChart = null;
+        let viewEndDate = new Date();
+        let viewRangeDays = 10;
 
         const roomColors = {
             'office': 'rgba(255, 99, 132, 1)',
@@ -136,9 +190,10 @@
                         x: {
                             type: 'time',
                             time: {
-                                unit: 'hour',
+                                unit: 'day',
                                 displayFormats: {
-                                    hour: 'HH:mm'
+                                    hour: 'HH:mm',
+                                    day: 'MMM d'
                                 }
                             },
                             title: {
@@ -158,8 +213,7 @@
                             position: 'top',
                         },
                         title: {
-                            display: true,
-                            text: 'Historical Temperature Data'
+                            display: false
                         }
                     },
                     elements: {
@@ -175,8 +229,72 @@
             });
         }
 
+        function setRange(days) {
+            viewRangeDays = days;
+            
+            // Update active state of buttons
+            document.querySelectorAll('#range-buttons .control-btn').forEach(btn => {
+                const btnDays = parseInt(btn.getAttribute('onclick').match(/\d+/)[0]);
+                if (btnDays === days) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            updateChart();
+        }
+
+        function panTime(direction) {
+            if (viewRangeDays === 0) return; // Can't pan if showing everything
+
+            const panAmount = viewRangeDays * 0.5; // Pan by half the current range
+            const newEndDate = new Date(viewEndDate.getTime() + direction * panAmount * 24 * 60 * 60 * 1000);
+            
+            // Don't pan into the future beyond a small buffer
+            if (newEndDate > new Date(new Date().getTime() + 3600000)) {
+                viewEndDate = new Date();
+            } else {
+                viewEndDate = newEndDate;
+            }
+
+            updateChart();
+        }
+
+        function resetToNow() {
+            viewEndDate = new Date();
+            updateChart();
+        }
+
         function updateChart() {
-            fetch('/pyziggy/api/temperature_data')
+            let url = '/pyziggy/api/temperature_data';
+            const params = new URLSearchParams();
+
+            if (viewRangeDays > 0) {
+                const startDate = new Date(viewEndDate.getTime() - viewRangeDays * 24 * 60 * 60 * 1000);
+                params.append('start', startDate.toISOString());
+                params.append('end', viewEndDate.toISOString());
+                
+                // Update unit based on range
+                if (viewRangeDays <= 2) {
+                    temperatureChart.options.scales.x.time.unit = 'hour';
+                } else {
+                    temperatureChart.options.scales.x.time.unit = 'day';
+                }
+
+                document.getElementById('range-info').innerText = 
+                    `${startDate.toLocaleDateString()} - ${viewEndDate.toLocaleDateString()}`;
+            } else {
+                document.getElementById('range-info').innerText = 'All recorded data';
+                temperatureChart.options.scales.x.time.unit = 'day';
+            }
+
+            const queryString = params.toString();
+            if (queryString) {
+                url += '?' + queryString;
+            }
+
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     const datasets = [];
@@ -310,7 +428,7 @@
         // Initial fetch
         updateRooms();
         initChart();
-        updateChart();
+        setRange(10);
 
         // Update rooms every 10 seconds
         setInterval(updateRooms, 10000);

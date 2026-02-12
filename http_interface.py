@@ -146,7 +146,9 @@ def http_room_infos():
     """
 
     from temperature import get_room_infos
+
     return jsonify(get_room_infos())
+
 
 @app.route("/pyziggy/api/temperature_data")
 def http_temperature_data():
@@ -155,6 +157,8 @@ def http_temperature_data():
 
     The data for each room is a list of timestamp-temperature pairs, where the timestamp
     is in ISO 8601 format.
+
+    Supports 'start' and 'end' query parameters as ISO 8601 strings.
 
     {
       "bathroom": [
@@ -285,6 +289,14 @@ def http_temperature_data():
       ]
     }
     """
+    from datetime import datetime
+
+    start_str = request.args.get("start")
+    end_str = request.args.get("end")
+
+    start_dt = datetime.fromisoformat(start_str) if start_str else None
+    end_dt = datetime.fromisoformat(end_str) if end_str else None
 
     from temperature import temperature_data
-    return jsonify(temperature_data.load())
+
+    return jsonify(temperature_data.load(start_dt=start_dt, end_dt=end_dt))

@@ -35,7 +35,9 @@ class PersistentData:
             for key, value in self.source().items():
                 writer.writerow([now, key, value])
 
-    def load(self) -> Dict[str, list[Tuple[str, float]]]:
+    def load(
+        self, start_dt: datetime | None = None, end_dt: datetime | None = None
+    ) -> Dict[str, list[Tuple[str, float]]]:
         data: Dict[str, list[Tuple[str, float]]] = {}
 
         if not self.path.exists():
@@ -46,6 +48,14 @@ class PersistentData:
 
             for row in reader:
                 timestamp_str, key, value_str = row
+                dt = datetime.fromisoformat(timestamp_str)
+
+                if start_dt and dt < start_dt:
+                    continue
+
+                if end_dt and dt > end_dt:
+                    continue
+
                 value = float(value_str)
 
                 if key not in data:
