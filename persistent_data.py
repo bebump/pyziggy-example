@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Callable, Dict, Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
 import csv
 
 
@@ -14,6 +14,45 @@ def get_datetime_now_string() -> str:
     utc_offset = dt.strftime("%z")
     split_utc_offset = utc_offset[:3] + ":" + utc_offset[3:]
     return dt.strftime("%Y-%m-%dT%H:%M:%S") + split_utc_offset
+
+
+def resample(data: list[Tuple[str, float]], num_max_samples=1000):
+    """
+    Resamples the data to at most num_max_samples samples by averaging values in time intervals.
+    """
+
+    if len(data) <= num_max_samples:
+        return data
+
+    start_dt = datetime.fromisoformat(data[0][0])
+    end_dt = datetime.fromisoformat(data[-1][0])
+    total_seconds = (end_dt - start_dt).total_seconds()
+    interval_seconds = total_seconds / num_max_samples
+
+    resampled_data: list[Tuple[str, float]] = []
+    current_interval_start_dt = start_dt
+    current_interval_end_dt = start_dt + timedelta(seconds=interval_seconds)
+    current_interval_values: list[float] = []
+
+    for timestamp_str, value in data:
+        dt = datetime.fromisoformat(timestamp_str)
+
+        while dt >= current_interval_end_dt:
+            if current_interval_values:
+                average_value = sum(current_interval_values) / len(current_interval_values)
+                resampled_data.append((current_interval_start_dt.isoformat(), average_value))
+
+            current_interval_start_dt = current_interval_end_dt
+            current_interval_end_dt += timedelta(seconds=interval_seconds)
+            current_interval_values = []
+
+        current_interval_values.append(value)
+
+    if current_interval_values:
+        average_value = sum(current_interval_values) / len(current_interval_values)
+        resampled_data.append((current_interval_start_dt.isoformat(), average_value))
+
+    return resampled_data
 
 
 class PersistentData:
@@ -65,5 +104,6 @@ class PersistentData:
 
         for key in data:
             data[key].sort(key=lambda x: datetime.fromisoformat(x[0]))
+            data[key] = resample(data[key])
 
         return data
