@@ -240,6 +240,9 @@ class PersistentData(AsyncUpdater):
             self._resave()
 
     def _load(self):
+        if not self._path.exists():
+            return
+
         with self._lock:
             with self._path.open("r") as f:
                 reader = csv.reader(f)
