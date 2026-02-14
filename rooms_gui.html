@@ -151,6 +151,7 @@
                 <button class="control-btn" onclick="setRange(7)">7d</button>
                 <button class="control-btn" onclick="setRange(10)" id="default-range-btn">10d</button>
                 <button class="control-btn" onclick="setRange(30)">30d</button>
+                <button class="control-btn" onclick="setRange(182)">6m</button>
                 <button class="control-btn" onclick="setRange(0)">All</button>
             </div>
             <button class="control-btn" onclick="panTime(1)">Next ▶</button>
@@ -280,6 +281,8 @@
                 // Update unit based on range
                 if (viewRangeDays <= 2) {
                     temperatureChart.options.scales.x.time.unit = 'hour';
+                } else if (viewRangeDays >= 180) {
+                    temperatureChart.options.scales.x.time.unit = 'month';
                 } else {
                     temperatureChart.options.scales.x.time.unit = 'day';
                 }
