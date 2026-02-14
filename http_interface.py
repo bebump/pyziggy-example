@@ -77,18 +77,10 @@ def make_html(description: str, commands: list[Dict[Any, Any]]):
     return result
 
 
-@app.route("/pyziggy")
+@app.route("/pyziggy/rooms")
 def http_pyziggy_help():
-    commands = [
-        {"action": "turn_off_all_lights"},
-        {"action": "turn_things_back_on"},
-        {"action": "toggle_office"},
-        {"action": "toggle_couch"},
-    ]
-
-    description = "Send commands to <code>/pyziggy/api/post_command</code>."
-    html = make_html(description, commands)
-    return html, 200
+    with open(rel_to_py("rooms_gui.html"), "r") as file:
+        return file.read(), 200
 
 
 @app.route("/pyziggy/api/post_command", methods=["POST"])
@@ -101,12 +93,6 @@ def http_pyziggy_post():
     message_loop.post_message(message_callback)
 
     return "", 200
-
-
-@app.route("/pyziggy/rooms")
-def http_rooms_gui():
-    with open(rel_to_py("rooms_gui.html"), "r") as file:
-        return file.read(), 200
 
 
 @app.route("/pyziggy/api/room_infos")

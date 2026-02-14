@@ -1,0 +1,26 @@
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="250" cy="250" r="230" fill="#E0C0A8" />
+  
+  <g transform="translate(70, 170)">
+    <rect x="0" y="0" width="90" height="130" fill="white" />
+    <rect x="0" y="0" width="90" height="25" fill="#D0D0D0" />
+    <rect x="10" y="25" width="70" height="95" fill="#8A9BA5" />
+    <rect x="0" y="130" width="90" height="10" fill="#8A7968" />
+  </g>
+  
+  <g transform="translate(220, 170)">
+    <rect x="0" y="0" width="90" height="160" fill="white" />
+    <rect x="0" y="0" width="90" height="25" fill="#D0D0D0" />
+    <rect x="10" y="25" width="70" height="125" fill="#8A9BA5" />
+    <rect x="0" y="160" width="90" height="10" fill="#8A7968" />
+    <rect x="5" y="130" width="80" height="10" fill="#7A3E3E" />
+  </g>
+  
+  <g transform="translate(340, 170)">
+    <rect x="0" y="0" width="90" height="160" fill="white" />
+    <rect x="0" y="0" width="90" height="25" fill="#D0D0D0" />
+    <rect x="10" y="25" width="70" height="125" fill="#8A9BA5" />
+    <rect x="0" y="160" width="90" height="10" fill="#8A7968" />
+    <rect x="5" y="130" width="80" height="10" fill="#7A3E3E" />
+  </g>
+</svg>

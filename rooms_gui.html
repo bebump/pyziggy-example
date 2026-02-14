@@ -2,24 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Room Temperatures</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg width='500' height='500' viewBox='0 0 500 500' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='250' cy='250' r='230' fill='%23E0C0A8' /%3E%3Cg transform='translate(70, 170)'%3E%3Crect x='0' y='0' width='90' height='130' fill='white' /%3E%3Crect x='0' y='0' width='90' height='25' fill='%23D0D0D0' /%3E%3Crect x='10' y='25' width='70' height='95' fill='%238A9BA5' /%3E%3Crect x='0' y='130' width='90' height='10' fill='%238A7968' /%3E%3C/g%3E%3Cg transform='translate(220, 170)'%3E%3Crect x='0' y='0' width='90' height='160' fill='white' /%3E%3Crect x='0' y='0' width='90' height='25' fill='%23D0D0D0' /%3E%3Crect x='10' y='25' width='70' height='125' fill='%238A9BA5' /%3E%3Crect x='0' y='160' width='90' height='10' fill='%238A7968' /%3E%3Crect x='5' y='130' width='80' height='10' fill='%237A3E3E' /%3E%3C/g%3E%3Cg transform='translate(340, 170)'%3E%3Crect x='0' y='0' width='90' height='160' fill='white' /%3E%3Crect x='0' y='0' width='90' height='25' fill='%23D0D0D0' /%3E%3Crect x='10' y='25' width='70' height='125' fill='%238A9BA5' /%3E%3Crect x='0' y='160' width='90' height='10' fill='%238A7968' /%3E%3Crect x='5' y='130' width='80' height='10' fill='%237A3E3E' /%3E%3C/g%3E%3C/svg%3E" sizes="any" type="image/svg+xml">
+    <title>Ferenc</title>
     <script src="https://cdn.rawgit.com/Mikhus/canvas-gauges/master/gauge.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@3.3.1/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
-        body {
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
-            margin: 0;
+        }
+
+        #viewport {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #slider {
+            display: flex;
+            width: 200%;
+            height: 100%;
+            transition: transform 0.3s ease-out;
+            will-change: transform;
+        }
+
+        .page {
+            width: 50%;
+            height: 100%;
+            overflow-y: auto;
             padding: 20px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
         }
 
+        /* Pagination Dots */
+        #dots {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .dot:hover {
+            background: rgba(0,0,0,0.4);
+            transform: scale(1.2);
+        }
+
+        .dot.active {
+            background: #007bff;
+        }
+
+        /* Rooms Page Styles */
         #rooms-container {
             display: flex;
             flex-wrap: wrap;
@@ -40,10 +101,6 @@
             transition: transform 0.2s;
         }
 
-        .room-card:hover {
-            transform: translateY(-5px);
-        }
-
         .chart-card {
             background: white;
             border-radius: 15px;
@@ -51,8 +108,8 @@
             padding: 20px;
             width: 95%;
             max-width: 1200px;
-            height: 450px;
-            margin-bottom: 40px;
+            min-height: 400px;
+            margin-bottom: 60px; /* Space for dots */
             display: flex;
             flex-direction: column;
         }
@@ -76,21 +133,10 @@
             transition: all 0.2s;
         }
 
-        .control-btn:hover {
-            background: #f0f0f0;
-        }
-
         .control-btn.active {
             background: #007bff;
             color: white;
             border-color: #007bff;
-        }
-
-        .range-info {
-            font-size: 0.9rem;
-            color: #666;
-            margin: 0 10px;
-            font-weight: bold;
         }
 
         .room-name {
@@ -130,42 +176,161 @@
             color: #388e3c;
         }
 
+        /* Commands Page Styles */
+        .commands-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-top: 40px;
+            color: #333;
+        }
+
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+
+        .mobile-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 20px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+            min-width: 220px;
+            text-align: center;
+        }
+
+        .mobile-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+
         .last-update {
             position: fixed;
             bottom: 10px;
             right: 10px;
             font-size: 0.8rem;
             color: #999;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
-    <div id="rooms-container"></div>
-    
-    <div class="chart-card">
-        <div class="chart-controls">
-            <button class="control-btn" onclick="panTime(-1)">◀ Prev</button>
-            <div id="range-buttons">
-                <button class="control-btn" onclick="setRange(1)">24h</button>
-                <button class="control-btn" onclick="setRange(3)">3d</button>
-                <button class="control-btn" onclick="setRange(7)">7d</button>
-                <button class="control-btn" onclick="setRange(10)" id="default-range-btn">10d</button>
-                <button class="control-btn" onclick="setRange(30)">30d</button>
-                <button class="control-btn" onclick="setRange(182)">6m</button>
-                <button class="control-btn" onclick="setRange(0)">All</button>
+    <div id="viewport">
+        <div id="slider">
+            <!-- Page 1: Rooms -->
+            <div class="page" id="rooms-page">
+                <div id="rooms-container"></div>
+                <div class="chart-card">
+                    <div class="chart-controls">
+                        <button class="control-btn" onclick="panTime(-1)">◀ Prev</button>
+                        <div id="range-buttons">
+                            <button class="control-btn" onclick="setRange(1)">24h</button>
+                            <button class="control-btn" onclick="setRange(3)">3d</button>
+                            <button class="control-btn" onclick="setRange(7)">7d</button>
+                            <button class="control-btn" onclick="setRange(10)" id="default-range-btn">10d</button>
+                            <button class="control-btn" onclick="setRange(30)">30d</button>
+                            <button class="control-btn" onclick="setRange(182)">6m</button>
+                            <button class="control-btn" onclick="setRange(0)">All</button>
+                        </div>
+                        <button class="control-btn" onclick="panTime(1)">Next ▶</button>
+                        <button class="control-btn" onclick="resetToNow()">Now</button>
+                        <div class="range-info" id="range-info"></div>
+                    </div>
+                    <div style="flex-grow: 1; min-height: 0; position: relative;">
+                        <canvas id="temperature-chart"></canvas>
+                    </div>
+                </div>
             </div>
-            <button class="control-btn" onclick="panTime(1)">Next ▶</button>
-            <button class="control-btn" onclick="resetToNow()">Now</button>
-            <div class="range-info" id="range-info"></div>
+
+            <!-- Page 2: Commands -->
+            <div class="page" id="commands-page">
+                <div class="commands-title">Quick Actions</div>
+                <p style="color: #666; text-align: center; max-width: 80%;">
+                    Swipe left or right to switch between views.
+                </p>
+                <div class="button-container">
+                    <button class="mobile-button" onclick='sendData({"action": "turn_off_all_lights"})'>Turn Off All Lights</button>
+                    <button class="mobile-button" onclick='sendData({"action": "turn_things_back_on"})'>Turn Things Back On</button>
+                    <button class="mobile-button" onclick='sendData({"action": "toggle_office"})'>Toggle Office</button>
+                    <button class="mobile-button" onclick='sendData({"action": "toggle_couch"})'>Toggle Couch</button>
+                </div>
+            </div>
         </div>
-        <div style="flex-grow: 1; min-height: 0; position: relative;">
-            <canvas id="temperature-chart"></canvas>
-        </div>
+    </div>
+
+    <div id="dots">
+        <div class="dot active" id="dot-0" onclick="goToPage(0)"></div>
+        <div class="dot" id="dot-1" onclick="goToPage(1)"></div>
     </div>
 
     <div class="last-update" id="last-update">Last update: Never</div>
 
     <script>
+        // --- Navigation Logic ---
+        let currentPage = 0;
+        const slider = document.getElementById('slider');
+        const dots = [document.getElementById('dot-0'), document.getElementById('dot-1')];
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function goToPage(index) {
+            currentPage = index;
+            slider.style.transform = `translateX(-${index * 50}%)`;
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft') {
+                if (currentPage > 0) goToPage(currentPage - 1);
+            } else if (e.key === 'ArrowRight') {
+                if (currentPage < 1) goToPage(currentPage + 1);
+            }
+        });
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, false);
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleGesture();
+        }, false);
+
+        function handleGesture() {
+            const threshold = 50;
+            if (touchEndX < touchStartX - threshold) {
+                // Swiped left
+                if (currentPage < 1) goToPage(currentPage + 1);
+            }
+            if (touchEndX > touchStartX + threshold) {
+                // Swiped right
+                if (currentPage > 0) goToPage(currentPage - 1);
+            }
+        }
+
+        function sendData(data) {
+            fetch('/pyziggy/api/post_command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+        }
+
+        // --- Original Rooms & Charts Logic ---
         const gauges = {};
         let temperatureChart = null;
         let viewEndDate = new Date();
@@ -183,9 +348,7 @@
             const ctx = document.getElementById('temperature-chart').getContext('2d');
             temperatureChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    datasets: []
-                },
+                data: { datasets: [] },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -194,39 +357,16 @@
                             type: 'time',
                             time: {
                                 unit: 'day',
-                                displayFormats: {
-                                    hour: 'HH:mm',
-                                    day: 'MMM d'
-                                }
+                                displayFormats: { hour: 'HH:mm', day: 'MMM d' }
                             },
-                            title: {
-                                display: true,
-                                text: 'Time'
-                            }
+                            title: { display: true, text: 'Time' }
                         },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Temperature (°C)'
-                            }
-                        }
+                        y: { title: { display: true, text: 'Temperature (°C)' } }
                     },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: false
-                        }
-                    },
+                    plugins: { legend: { position: 'top' }, title: { display: false } },
                     elements: {
-                        point: {
-                            radius: 0 // Hide points for better performance
-                        },
-                        line: {
-                            borderWidth: 2,
-                            tension: 0.3
-                        }
+                        point: { radius: 0 },
+                        line: { borderWidth: 2, tension: 0.3 }
                     }
                 }
             });
@@ -234,33 +374,23 @@
 
         function setRange(days) {
             viewRangeDays = days;
-            
-            // Update active state of buttons
             document.querySelectorAll('#range-buttons .control-btn').forEach(btn => {
-                const btnDays = parseInt(btn.getAttribute('onclick').match(/\d+/)[0]);
-                if (btnDays === days) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+                const btnDaysStr = btn.getAttribute('onclick').match(/\d+/);
+                const btnDays = btnDaysStr ? parseInt(btnDaysStr[0]) : 0;
+                btn.classList.toggle('active', btnDays === days);
             });
-
             updateChart();
         }
 
         function panTime(direction) {
-            if (viewRangeDays === 0) return; // Can't pan if showing everything
-
-            const panAmount = viewRangeDays * 0.5; // Pan by half the current range
+            if (viewRangeDays === 0) return;
+            const panAmount = viewRangeDays * 0.5;
             const newEndDate = new Date(viewEndDate.getTime() + direction * panAmount * 24 * 60 * 60 * 1000);
-            
-            // Don't pan into the future beyond a small buffer
             if (newEndDate > new Date(new Date().getTime() + 3600000)) {
                 viewEndDate = new Date();
             } else {
                 viewEndDate = newEndDate;
             }
-
             updateChart();
         }
 
@@ -272,42 +402,27 @@
         function updateChart() {
             let url = '/pyziggy/api/temperature_data';
             const params = new URLSearchParams();
-
             if (viewRangeDays > 0) {
                 const startDate = new Date(viewEndDate.getTime() - viewRangeDays * 24 * 60 * 60 * 1000);
                 params.append('start', startDate.toISOString());
                 params.append('end', viewEndDate.toISOString());
-                
-                // Update unit based on range
-                if (viewRangeDays <= 2) {
-                    temperatureChart.options.scales.x.time.unit = 'hour';
-                } else if (viewRangeDays >= 180) {
-                    temperatureChart.options.scales.x.time.unit = 'month';
-                } else {
-                    temperatureChart.options.scales.x.time.unit = 'day';
-                }
-
-                document.getElementById('range-info').innerText = 
-                    `${startDate.toLocaleDateString()} - ${viewEndDate.toLocaleDateString()}`;
+                if (viewRangeDays <= 2) temperatureChart.options.scales.x.time.unit = 'hour';
+                else if (viewRangeDays >= 180) temperatureChart.options.scales.x.time.unit = 'month';
+                else temperatureChart.options.scales.x.time.unit = 'day';
+                document.getElementById('range-info').innerText = `${startDate.toLocaleDateString()} - ${viewEndDate.toLocaleDateString()}`;
             } else {
                 document.getElementById('range-info').innerText = 'All recorded data';
                 temperatureChart.options.scales.x.time.unit = 'day';
             }
-
             const queryString = params.toString();
-            if (queryString) {
-                url += '?' + queryString;
-            }
-
+            if (queryString) url += '?' + queryString;
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    // Capture current visibility to preserve it
                     const visibilityMap = {};
                     temperatureChart.data.datasets.forEach((ds, index) => {
                         visibilityMap[ds.label] = temperatureChart.isDatasetVisible(index);
                     });
-
                     const datasets = [];
                     for (const [roomKey, points] of Object.entries(data)) {
                         const label = roomKey.replace('_', ' ');
@@ -328,48 +443,20 @@
         function createGauge(id, container, name) {
             const canvas = document.createElement('canvas');
             container.appendChild(canvas);
-
             return new RadialGauge({
-                renderTo: canvas,
-                width: 200,
-                height: 200,
-                units: "°C",
-                title: name,
-                minValue: 20,
-                maxValue: 28,
-                majorTicks: [
-                    "20", "21", "22", "23", "24", "25", "26", "27", "28"
-                ],
-                minorTicks: 2,
-                strokeTicks: true,
+                renderTo: canvas, width: 200, height: 200, units: "°C", title: name,
+                minValue: 20, maxValue: 28, majorTicks: ["20", "21", "22", "23", "24", "25", "26", "27", "28"],
+                minorTicks: 2, strokeTicks: true,
                 highlights: [
                     { "from": 20, "to": 22, "color": "rgba(0,0,255,.3)" },
                     { "from": 26, "to": 28, "color": "rgba(255,0,0,.3)" }
                 ],
-                ticksAngle: 225,
-                startAngle: 67.5,
-                colorMajorTicks: "#444",
-                colorMinorTicks: "#666",
-                colorTitle: "#333",
-                colorUnits: "#333",
-                colorNumbers: "#222",
-                colorPlate: "#fff",
-                borderShadowWidth: 0,
-                borders: false,
-                needleType: "arrow",
-                needleWidth: 2,
-                needleCircleSize: 7,
-                needleCircleOuter: true,
-                needleCircleInner: false,
-                animationDuration: 1500,
-                animationRule: "linear",
-                colorNeedle: "#222",
-                colorNeedleEnd: "#222",
-                valueBox: true,
-                valueInt: 1,
-                valueDec: 1,
-                colorValueText: "#000",
-                fontValueSize: 45
+                ticksAngle: 225, startAngle: 67.5, colorMajorTicks: "#444", colorMinorTicks: "#666",
+                colorTitle: "#333", colorUnits: "#333", colorNumbers: "#222", colorPlate: "#fff",
+                borderShadowWidth: 0, borders: false, needleType: "arrow", needleWidth: 2,
+                needleCircleSize: 7, needleCircleOuter: true, needleCircleInner: false,
+                animationDuration: 1500, animationRule: "linear", colorNeedle: "#222", colorNeedleEnd: "#222",
+                valueBox: true, valueInt: 1, valueDec: 1, colorValueText: "#000", fontValueSize: 45
             }).draw();
         }
 
@@ -378,59 +465,38 @@
                 .then(response => response.json())
                 .then(data => {
                     const container = document.getElementById('rooms-container');
-
                     for (const [roomKey, info] of Object.entries(data)) {
                         let card = document.getElementById(`card-${roomKey}`);
                         if (!card) {
                             card = document.createElement('div');
                             card.id = `card-${roomKey}`;
                             card.className = 'room-card';
-
                             const nameEl = document.createElement('div');
                             nameEl.className = 'room-name';
                             nameEl.innerText = roomKey.replace('_', ' ');
                             card.appendChild(nameEl);
-
                             const gaugeContainer = document.createElement('div');
                             card.appendChild(gaugeContainer);
                             gauges[roomKey] = createGauge(roomKey, gaugeContainer, "");
-
                             const infoContainer = document.createElement('div');
                             infoContainer.id = `info-${roomKey}`;
                             infoContainer.className = 'info-container';
                             card.appendChild(infoContainer);
-
                             container.appendChild(card);
                         }
-
-                        // Update Gauge
                         gauges[roomKey].value = info.current_temperature;
-
-                        // Update Highlights to show target range
                         const target = info.target_temperature;
                         const dev = info.max_allowed_deviation_from_target;
                         const highlights = [
                             { "from": 20, "to": 22, "color": "rgba(0,0,255,.3)" },
                             { "from": 26, "to": 28, "color": "rgba(255,0,0,.3)" }
                         ];
-
-                        if (target > 0) {
-                            highlights.push({ "from": target - dev, "to": target + dev, "color": "rgba(0,255,0,.5)" });
-                        }
-
+                        if (target > 0) highlights.push({ "from": target - dev, "to": target + dev, "color": "rgba(0,255,0,.5)" });
                         gauges[roomKey].update({ highlights: highlights });
                         const infoEl = document.getElementById(`info-${roomKey}`);
                         infoEl.innerHTML = `
-                            <div class="info-row">
-                                <span>Target:</span>
-                                <span>${info.target_temperature.toFixed(1)}°C</span>
-                            </div>
-                            <div class="info-row">
-                                <span>Status:</span>
-                                <span class="heating-status ${info.heating_on ? 'heating-on' : 'heating-off'}">
-                                    ${info.heating_on ? 'HEATING' : 'IDLE'}
-                                </span>
-                            </div>
+                            <div class="info-row"><span>Target:</span><span>${info.target_temperature.toFixed(1)}°C</span></div>
+                            <div class="info-row"><span>Status:</span><span class="heating-status ${info.heating_on ? 'heating-on' : 'heating-off'}">${info.heating_on ? 'HEATING' : 'IDLE'}</span></div>
                         `;
                     }
                     document.getElementById('last-update').innerText = `Last update: ${new Date().toLocaleTimeString()}`;
@@ -438,16 +504,87 @@
                 .catch(error => console.error('Error fetching room infos:', error));
         }
 
-        // Initial fetch
         updateRooms();
         initChart();
         setRange(10);
-
-        // Update rooms every 10 seconds
         setInterval(updateRooms, 10000);
-        
-        // Update chart every 5 minutes
         setInterval(updateChart, 300000);
+
+        // --- PWA Logic ---
+        const iconSize = 192;
+        const manifest = {
+            name: 'Ferenc Home',
+            short_name: 'Ferenc',
+            display: 'standalone',
+            theme_color: '#f0f2f5',
+            background_color: '#f0f2f5',
+            start_url: window.location.href,
+        };
+
+        (async function() {
+            const svgIconLink = document.querySelector('link[rel="icon"]');
+            const pngDataUrl = await svgToPng(svgIconLink.href, iconSize);
+            setIcon("link[rel='icon']", pngDataUrl, iconSize);
+            setIcon("link[rel='apple-touch-icon']", pngDataUrl);
+            manifest.icons = [{ src: pngDataUrl, sizes: `${iconSize}x${iconSize}`, type: 'image/png' }];
+            setManifest(manifest);
+            const startupImageDataUrl = await createStartupImage(svgIconLink.href, manifest.background_color);
+            const startupLink = document.createElement('link');
+            startupLink.rel = 'apple-touch-startup-image';
+            startupLink.href = startupImageDataUrl;
+            document.head.appendChild(startupLink);
+        })();
+
+        function setManifest(manifest) {
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = "data:application/json;base64," + btoa(JSON.stringify(manifest));
+            document.head.appendChild(link);
+        }
+
+        function setIcon(query, iconurl, size) {
+            const iconLink = document.querySelector(query);
+            if (iconLink) {
+                iconLink.href = iconurl;
+                iconLink.type = 'image/png';
+                if (size) iconLink.setAttribute('sizes', `${size}x${size}`);
+            }
+        }
+
+        function svgToPng(svgDataUrl, size) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size; canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, size, size);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = reject;
+                img.src = svgDataUrl;
+            });
+        }
+
+        function createStartupImage(svgDataUrl, bgColor) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const dpr = window.devicePixelRatio || 1;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = window.screen.width * dpr;
+                    canvas.height = window.screen.height * dpr;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = bgColor;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    const iconDisplaySize = canvas.width * 0.25;
+                    ctx.drawImage(img, (canvas.width - iconDisplaySize) / 2, (canvas.height - iconDisplaySize) / 2, iconDisplaySize, iconDisplaySize);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = reject;
+                img.src = svgDataUrl;
+            });
+        }
     </script>
 </body>
 </html>
