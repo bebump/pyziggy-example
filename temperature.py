@@ -1,12 +1,13 @@
 from enum import Enum
 from pathlib import Path
+from typing import Dict
 
 from pyziggy.message_loop import MessageLoopTimer
 
 from astral_mired import EasyAstral
 from devices import devices
 from persistent_data import PersistentData
-from pyziggy_autogenerate.available_devices import SONOFF_TRVZB
+from pyziggy_autogenerate.available_devices import SONOFF_TRVZB, SONOFF_SNZB_02P
 
 
 class Trv:
@@ -38,7 +39,7 @@ trvs = {
     Rooms.LIVING_ROOM: Trv(devices.living_room_valve),
 }
 
-temps = {
+temps: Dict[Rooms, SONOFF_SNZB_02P] = {
     Rooms.OFFICE: devices.office_temp,
     Rooms.LIVING_ROOM: devices.living_room_temp,
     Rooms.KITCHEN: devices.living_room_temp,
@@ -123,15 +124,18 @@ def get_room_infos():
 
 
 # ==============================================================================
-def temperature_data_source():
-    return {
-        room.value: temps[room].temperature.get() for room in Rooms if room in temps
-    }
-
-
 temperature_data = PersistentData(
-    Path.home() / "pyziggy_temperature_data.csv", temperature_data_source
+    Path.home() / "pyziggy_temperature_data.csv", ratelimit_s=60
 )
 
-save_temperature_data_timer = MessageLoopTimer(lambda timer: temperature_data.save())
-save_temperature_data_timer.start(300)
+# Ignoring mypy error below
+# https://github.com/python/mypy/issues/12557
+for k, v in temps.items():
+    if k == Rooms.KITCHEN:
+        continue
+
+    v.temperature.add_listener(
+        lambda name=k, temp_sensor=v: temperature_data.write(  # type: ignore
+            name.value, temp_sensor.temperature.get()
+        )
+    )
