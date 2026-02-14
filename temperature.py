@@ -125,7 +125,7 @@ def get_room_infos():
 
 # ==============================================================================
 temperature_data = PersistentData(
-    Path.home() / "pyziggy_temperature_data.csv", ratelimit_s=60
+    Path.home() / "pyziggy_temperature_data.csv", ratelimit_s=3600
 )
 
 # Ignoring mypy error below
