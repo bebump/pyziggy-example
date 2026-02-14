@@ -302,13 +302,21 @@
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
+                    // Capture current visibility to preserve it
+                    const visibilityMap = {};
+                    temperatureChart.data.datasets.forEach((ds, index) => {
+                        visibilityMap[ds.label] = temperatureChart.isDatasetVisible(index);
+                    });
+
                     const datasets = [];
                     for (const [roomKey, points] of Object.entries(data)) {
+                        const label = roomKey.replace('_', ' ');
                         datasets.push({
-                            label: roomKey.replace('_', ' '),
+                            label: label,
                             data: points.map(p => ({ x: new Date(p[0]), y: p[1] })),
                             borderColor: roomColors[roomKey] || `hsl(${Math.random() * 360}, 70%, 50%)`,
                             backgroundColor: 'transparent',
+                            hidden: visibilityMap[label] === false
                         });
                     }
                     temperatureChart.data.datasets = datasets;
