@@ -560,7 +560,6 @@ class AvailableDevices(DevicesClient):
         self.kitchen_light = IKEA_STOFTMOLN_ceiling_wall_lamp_WW37("Kitchen Light")
         self.lampion = Innr_RB_249_T("Lampion")
         self.desk_lamp = IKEA_TRADFRI_bulb_E14_WS_globe_470lm("Desk Lamp")
-        self.tokabo = IKEA_TRADFRI_bulb_E14_WS_globe_470lm("Tokabo")
         self.hue_lightstrip = Philips_LCL007("Hue lightstrip")
         self.living_room_temp = SONOFF_SNZB_02P("Living room temp")
         self.plug = Tuya_TS011F("Plug")
@@ -582,4 +581,5 @@ class AvailableDevices(DevicesClient):
         self.tallbyn = Innr_RB_279_T("Tallbyn")
         self.kitchen_valve = SONOFF_TRVZB("Kitchen valve")
         self.fado = Innr_RB_279_T("Fado")
+        self.tokabo = IKEA_TRADFRI_bulb_E14_WS_globe_470lm("Tokabo")
 
