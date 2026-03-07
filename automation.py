@@ -41,24 +41,22 @@ kitchen = ScaleMapper(
 
 living_room_with_couch = ScaleMapper(
     [
-        (PlugScalable(devices.ikea_smart_plug), 0.0, 0.05),
-        (PlugScalable(devices.plug), 0.07, 0.1),
+        (PlugScalable(devices.plug), 0.0, 0.05),
         (L2S(devices.standing_lamp), 0.07, 0.7),
-        (L2S(devices.couch), 0.12, 0.7),
+        (L2S(devices.couch), 0.2, 0.7),
         (L2S(devices.tallbyn), 0.7, 1.0),
     ],
-    [0.06, 0.11],
+    [0.06],
     lambda: os.system("afplay /System/Library/Sounds/Tink.aiff &"),
 )
 
 living_room_no_couch = ScaleMapper(
     [
-        (PlugScalable(devices.ikea_smart_plug), 0.0, 0.05),
-        (PlugScalable(devices.plug), 0.07, 0.1),
-        (L2S(devices.tallbyn), 0.07, 1.0),
+        (PlugScalable(devices.plug), 0.0, 0.05),
+        (L2S(devices.tallbyn), 0.07, 0.7),
         (L2S(devices.standing_lamp), 0.5, 1.0),
     ],
-    [0.06],
+    [0.06, 0.7],
     lambda: os.system("afplay /System/Library/Sounds/Tink.aiff &"),
 )
 
@@ -71,8 +69,43 @@ def set_mired(mired):
             device.color_temp.set(mired)
 
 
+office: list[LightWithDimming] = [devices.printer, devices.tokabo, devices.reading_lamp]
+
+
+def toggle_office():
+    lights_are_off = any([light.state.get() == 0 for light in office])
+
+    for light in office:
+        if lights_are_off:
+            light.state.set(1)
+            light.brightness.set_normalized(1.0)
+        else:
+            light.state.set(0)
+
+
 def ikea_remote_action_handler():
-    toggle_office()
+    action = devices.ikea_remote.action.get_enum_value()
+    types = devices.ikea_remote.action.enum_type
+
+    def toggle_printer():
+        devices.printer.state.set(0 if devices.printer.state.get() > 0 else 1)
+
+    if action == types.brightness_move_up:
+        for l in office:
+            if l.state.get() == 1:
+                l.brightness.add_normalized(0.075)
+    elif action == types.brightness_move_down:
+        for l in office:
+            if l.state.get() == 1:
+                l.brightness.add_normalized(-0.075)
+    elif action == types.on:
+        toggle_office()
+    elif action == types.off:
+        toggle_office()
+    elif action == types.arrow_left_click:
+        toggle_printer()
+    elif action == types.arrow_right_click:
+        toggle_printer()
 
 
 ikea_remote_action_broadcaster = IkeaN2CommandRepeater(devices.ikea_remote)
@@ -263,19 +296,6 @@ devices.fado.brightness.add_listener(
         min(0.55, devices.fado.brightness.get_normalized())
     )
 )
-
-office: list[LightWithDimming] = [devices.printer, devices.tokabo, devices.reading_lamp]
-
-
-def toggle_office():
-    lights_are_off = any([light.state.get() == 0 for light in office])
-
-    for light in office:
-        if lights_are_off:
-            light.state.set(1)
-            light.brightness.set_normalized(1.0)
-        else:
-            light.state.set(0)
 
 
 def toggle_couch():
@@ -485,18 +505,6 @@ class Tv(Broadcaster):
         return self._is_on
 
 
+# Currently we're not using this for anything. This provides a listener to detect
+# if something is on.
 tv_state = Tv(devices.ikea_smart_plug.current)
-
-
-def tokabo_handler(timer: MessageLoopTimer):
-    # This is an annoying bulb that reduces its brightness by about 10 percent
-    # every hour for absolutely no discernible reason. And then it doesn't even
-    # report it, so even Zigbee2MQTT is unaware of this constant change.
-    #
-    # I'm going to force it to stay at my desired level.
-    if devices.tokabo.state.get() == 1:
-        devices.tokabo.brightness.set_normalized(0.7)
-
-
-tokabo_timer = MessageLoopTimer(tokabo_handler)
-tokabo_timer.start(120)
